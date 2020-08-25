@@ -1,0 +1,8 @@
+episodedetails:
+  - title: '{title}'
+  - showtitle: '{uploader}'
+  - uniqueid:
+      type: 'youtube'
+      default: 'true'
+      value: '{id}'
+  - plot: '{description}'
