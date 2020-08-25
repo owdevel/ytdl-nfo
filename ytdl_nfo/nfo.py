@@ -45,6 +45,11 @@ class Nfo:
         xmlstr = minidom.parseString(ET.tostring(self.top, 'utf-8')).toprettyxml(indent="    ")
         print(xmlstr)
 
+    def write_nfo(self, filename):
+        xmlstr = minidom.parseString(ET.tostring(self.top, 'utf-8')).toprettyxml(indent="    ")
+        with open(filename, 'w') as f:
+            f.write(xmlstr)
+
 
 
 def get_config(extractor):
