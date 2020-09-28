@@ -8,13 +8,11 @@ class Ytdl_nfo:
         # Read json data
         with open(self.path, 'r') as f:
             self.data = json.load(f)
-        self.extractor = self.data['extractor']
+        self.extractor = self.data['extractor'].lower()
         self.filename = self.data['_filename'].split('.')[-2]
         self.nfo = nfo.get_config(self.extractor)
 
     def process(self):
-        print(self.extractor)
-        print(self.nfo.data)
         self.nfo.generate(self.data)
         self.nfo.print_nfo()
         self.nfo.write_nfo(f'{self.filename}.nfo')

@@ -2,7 +2,13 @@ episodedetails:
   - title: '{title}'
   - showtitle: '{uploader}'
   - uniqueid:
-      type: 'youtube'
-      default: 'true'
+      attr:
+        type: 'youtube'
+        default: "true"
       value: '{id}'
   - plot: '{description}'
+  - premiered:
+      convert: 'date'
+      input_f: '%Y%m%d'
+      output_f: '%Y-%m-%d'
+      value: '{upload_date}'

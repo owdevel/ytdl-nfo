@@ -1,10 +1,12 @@
 import yaml
+import ast
+import datetime as dt
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 class Nfo:
     def __init__(self, extractor):
-        with open('./ytdl_nfo/configs/youtube.yml','r') as f:
+        with open(f"./ytdl_nfo/configs/{extractor}.yml",'r') as f:
             self.data = yaml.load(f, Loader=yaml.FullLoader)
 
     def generate(self, raw_data):
@@ -20,6 +22,7 @@ class Nfo:
 
         # Check if current node is a list
         if isinstance(subtree, list):
+
             # Process individual nodes
             for child in subtree:
                 self.__create_child(parent, child, raw_data)
@@ -27,19 +30,53 @@ class Nfo:
 
         # Process data in child node
         child_name = list(subtree.keys())[0]
-        child = ET.SubElement(parent, child_name)
+
+        table = child_name[-1] == '!'
+
+        attributes = {}
+        children = []
 
         # Check if attributes are present
         if isinstance(subtree[child_name], dict):
-            for attribute, value in subtree[child_name].items():
-                # Set text if value
-                if attribute == 'value':
-                    child.text = value.format(**raw_data)
-                else:
-                    child.set(attribute, value.format(**raw_data))
+            attributes = subtree[child_name]
+            value = subtree[child_name]['value']
+
+            # Set children if value flag
+            if table:
+                children = ast.literal_eval(value.format(**raw_data))
+            else:
+                children = [value.format(**raw_data)]
+
+            if 'convert' in attributes.keys():
+                target_type = attributes['convert']
+                input_f=attributes['input_f']
+                output_f=attributes['output_f']
+
+                for i in range(len(children)):
+                    if target_type == 'date':
+                        date = dt.datetime.strptime(children[i], input_f)
+                        children[i] = date.strftime(output_f)
+
+
         # Value only
         else:
-            child.text = subtree[child_name].format(**raw_data)
+            if table:
+                children = ast.literal_eval(subtree[child_name].format(**raw_data))
+            else:
+                children = [subtree[child_name].format(**raw_data)]
+
+        # Add the child node(s)
+        child_name = child_name.rstrip('!')
+
+        for value in children:
+            child = ET.SubElement(parent, child_name)
+            child.text = value
+
+            # Add attributes
+            if 'attr' in attributes.keys():
+                for attribute, attr_value in attributes['attr'].items():
+                    child.set(attribute, attr_value.format(**raw_data))
+
 
     def print_nfo(self):
         xmlstr = minidom.parseString(ET.tostring(self.top, 'utf-8')).toprettyxml(indent="    ")
