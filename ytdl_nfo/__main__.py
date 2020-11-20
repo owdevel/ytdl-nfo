@@ -8,6 +8,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='ytdl_nfo')
     parser.add_argument('input', metavar='JSON_FILE', type=str, help='Json file path')
+    parser.add_argument('--extractor', help='Specify specific extractor')
     args = parser.parse_args()
 
     if os.path.isfile(args.input):
@@ -16,7 +17,8 @@ def main():
     else:
         for filename in os.listdir(args.input):
             if filename.endswith('.json'):
-                file = Ytdl_nfo(os.path.join(args.input,  filename))
+                print(f'Processing {filename}')
+                file = Ytdl_nfo(os.path.join(args.input,  filename), args.extractor)
                 file.process()
 
 
