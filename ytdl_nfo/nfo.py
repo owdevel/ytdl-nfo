@@ -2,11 +2,12 @@ import yaml
 import ast
 import datetime as dt
 import xml.etree.ElementTree as ET
+import pkg_resources
 from xml.dom import minidom
 
 class Nfo:
     def __init__(self, extractor):
-        with open(f"./ytdl_nfo/configs/{extractor}.yml",'r') as f:
+        with pkg_resources.resource_stream("ytdl_nfo", f"configs/{extractor}.yml") as f:
             self.data = yaml.load(f, Loader=yaml.FullLoader)
 
     def generate(self, raw_data):
