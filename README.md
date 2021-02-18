@@ -60,6 +60,12 @@ Run the following command to get the configuration location.
 ytdl-nfo --config
 ```
 
+## Extractors
+Issues/Pull Requests are welcome to add more youtube-dl supported extractors to the repo.
+
+### Custom Extractors
+Coming Soon...
+
 ## Todo
 - [ ] Add try catches to pretty print errors
 - [ ] Recursive folder searching
