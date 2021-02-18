@@ -6,8 +6,8 @@ from Ytdl_nfo import Ytdl_nfo
 
 def main():
 
-    parser = argparse.ArgumentParser(description='ytdl_nfo')
-    parser.add_argument('input', metavar='JSON_FILE', type=str, help='Json file path')
+    parser = argparse.ArgumentParser(description='ytdl_nfo, a youtube-dl helper to convert the output of  \'youtube-dl --write-info-json\' to an NFO for use in kodi/plex/etc')
+    parser.add_argument('input', metavar='JSON_FILE', type=str, help='Json file to convert or folder to convert in')
     parser.add_argument('--extractor', help='Specify specific extractor')
     args = parser.parse_args()
 
