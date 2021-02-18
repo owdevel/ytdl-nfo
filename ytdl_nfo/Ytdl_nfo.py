@@ -1,6 +1,6 @@
 import os
 import json
-import nfo
+from .nfo import get_config
 
 class Ytdl_nfo:
     def __init__(self, file_path, extractor=None):
@@ -16,7 +16,7 @@ class Ytdl_nfo:
             self.extractor = self.data['extractor'].lower()
 
         self.filename = os.path.splitext(self.data['_filename'])[0]
-        self.nfo = nfo.get_config(self.extractor)
+        self.nfo = get_config(self.extractor)
 
     def process(self):
         self.nfo.generate(self.data)
