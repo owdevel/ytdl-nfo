@@ -14,6 +14,9 @@ setuptools.setup(
     url="https://github.com/owdevel/ytdl-nfo",
     packages=setuptools.find_packages(),
     license="Unlicense",
+    install_requires=[
+        'pyyaml',
+    ],
     classifiers= [
         "Programming Language :: Python :: 3",
         "License :: Public Domain",
