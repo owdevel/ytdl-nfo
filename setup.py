@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/owdevel/ytdl-nfo",
     packages=['ytdl_nfo'],
     package_dir={'ytdl_nfo': 'ytdl_nfo'},
-    package_data={'ytdl_nfo': ['configs/*.yml']},
+    package_data={'ytdl_nfo': ['configs/*.yaml']},
     license="Unlicense",
     install_requires=[
         'pyyaml',

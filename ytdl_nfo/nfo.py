@@ -7,7 +7,7 @@ from xml.dom import minidom
 
 class Nfo:
     def __init__(self, extractor):
-        with pkg_resources.resource_stream("ytdl_nfo", f"configs/{extractor}.yml") as f:
+        with pkg_resources.resource_stream("ytdl_nfo", f"configs/{extractor}.yaml") as f:
             self.data = yaml.load(f, Loader=yaml.FullLoader)
 
     def generate(self, raw_data):
