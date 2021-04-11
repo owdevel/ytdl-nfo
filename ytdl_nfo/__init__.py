@@ -11,12 +11,13 @@ def main():
     args = parser.parse_args()
 
     if os.path.isfile(args.input):
-        file = Ytdl_nfo(args.input)
+        print(f'Processing {args.input} with extractor {args.extractor}')
+        file = Ytdl_nfo(args.input, args.extractor)
         file.process()
     else:
         for filename in os.listdir(args.input):
             if filename.endswith('.json'):
-                print(f'Processing {filename}')
+                print(f'Processing {filename} with extractor {args.extractor}')
                 file = Ytdl_nfo(os.path.join(args.input,  filename), args.extractor)
                 file.process()
 
