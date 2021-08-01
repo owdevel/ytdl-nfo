@@ -26,4 +26,7 @@ class Ytdl_nfo:
     def print_data(self):
         print(json.dumps(self.data, indent=4, sort_keys=True))
 
+    def get_nfo(self):
+        return self.nfo.get_nfo()
+
 
