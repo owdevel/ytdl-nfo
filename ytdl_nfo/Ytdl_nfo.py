@@ -23,8 +23,9 @@ class Ytdl_nfo:
 
     def process(self):
         self.nfo.generate(self.data)
-        #self.nfo.print_nfo()
-        self.nfo.write_nfo(f'{self.filename}.nfo')
+
+    def write_nfo(self):
+        self.nfo.write_nfo(os.path.join(self.dir, f'{self.filename}.nfo'))
 
     def print_data(self):
         print(json.dumps(self.data, indent=4, sort_keys=True))
