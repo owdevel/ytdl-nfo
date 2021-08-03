@@ -15,14 +15,16 @@ def main():
         file = Ytdl_nfo(args.input, args.extractor)
         file.process()
     else:
-        for filename in os.listdir(args.input):
-            if filename.endswith('.json'):
-                print(f'Processing {filename} with extractor {args.extractor}')
-                file = Ytdl_nfo(os.path.join(args.input,  filename), args.extractor)
-                file.process()
+        for root, dirs, files in os.walk(args.input):
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
+                if file_name.endswith('.info.json'):
+                    print(f'Processing {file_path} with extractor {args.extractor}')
+                    file = Ytdl_nfo(file_path, args.extractor)
+                    file.process()
 
 def get_config_path():
-    return os.path.join(os.path.dirname(__file__),'configs')
+    return os.path.join(os.path.dirname(__file__), 'configs')
 
 
 __all__ = ['main', 'Ytdl_nfo', 'nfo']

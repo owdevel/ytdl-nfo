@@ -14,14 +14,17 @@ class Ytdl_nfo:
         self.extractor = extractor
         if extractor is None:
             self.extractor = self.data['extractor'].lower()
-
-        self.filename = os.path.splitext(self.data['_filename'])[0]
+        
+        if file_path.endswith(".info.json"):
+            self.filename = file_path[:-10]
+        else:
+            self.filename = os.path.splitext(self.data['_filename'])[0]
         self.nfo = get_config(self.extractor)
 
     def process(self):
         self.nfo.generate(self.data)
         #self.nfo.print_nfo()
-        self.nfo.write_nfo(os.path.join(self.dir, f'{self.filename}.nfo'))
+        self.nfo.write_nfo(f'{self.filename}.nfo')
 
     def print_data(self):
         print(json.dumps(self.data, indent=4, sort_keys=True))
