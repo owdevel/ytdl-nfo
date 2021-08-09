@@ -85,7 +85,7 @@ class Nfo:
 
     def write_nfo(self, filename):
         xmlstr = minidom.parseString(ET.tostring(self.top, 'utf-8')).toprettyxml(indent="    ")
-        with open(filename, 'w') as f:
+        with open(filename, 'wt', encoding="utf-8") as f:
             f.write(xmlstr)
     
     def get_nfo(self):
