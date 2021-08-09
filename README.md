@@ -25,11 +25,17 @@ pipx install git+https://github.com/owdevel/ytdl_nfo.git
 pip install git+https://github.com/owdevel/ytdl_nfo.git
 ```
 
-### Manual
+### Package from source
 1. Ensure Python 3.6 is installed
 2. Clone the repo using `git clone https://github.com/owdevel/ytdl_nfo.git`
 3. Cd into the directory
 4. Install requirements using pip `pip install -r requirements.txt`
+5. Install the package with `pip install .`
+
+#### Run without packaging (dev)
+1. Perform steps 1-4 of package from source
+2. Ensure the current working directory is set to the cloned folder
+3. Run with `python -m ytdl_nfo`
 
 
 ## Usage
@@ -42,7 +48,7 @@ Convert a single file
 ytdl-nfo great_video.info.json
 ```
 
-Convert a directory with json files
+Convert a directory and all sub directories with `.info.json` files
 ```bash
 ytdl-nfo video_folder
 ```
