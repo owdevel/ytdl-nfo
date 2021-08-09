@@ -21,13 +21,21 @@ def main():
         file.process()
         file.write_nfo()
     else:
-        print(f"Processing Folder {args.input}")
-        for filename in os.listdir(args.input):
-            if re.search(args.regex, filename):
-                print(f'Processing {filename} with {extractor_str} extractor')
-                file = Ytdl_nfo(os.path.join(args.input,  filename), args.extractor)
-                file.process()
-                file.write_nfo()
+        for root, dirs, files in os.walk(args.input):
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
+                if re.search(args.regex, file_name):
+
+                    path_no_ext = os.path.splitext(file_path)[0]
+                    info_re = r".info$"
+                    if re.search(info_re):
+                        path_no_ext = re.sub(info_re, '', path_no_ext)
+
+                    if args.overwrite or not os.path.exists(path_no_ext + ".nfo"):
+                        print(f'Processing {file_path} with extractor {args.extractor}')
+                        file = Ytdl_nfo(file_path, args.extractor)
+                        file.process()
+                        file.write_nfo()
 
 def get_config_path():
     return os.path.join(os.path.dirname(__file__), 'configs')
