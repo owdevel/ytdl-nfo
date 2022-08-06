@@ -8,7 +8,7 @@ class Ytdl_nfo:
         self.dir = os.path.dirname(file_path)
 
         # Read json data
-        with open(self.path, 'r') as f:
+        with open(self.path, "rt", encoding="utf-8") as f:
             self.data = json.load(f)
 
         self.extractor = extractor

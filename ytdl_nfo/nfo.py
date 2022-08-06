@@ -20,7 +20,11 @@ class Nfo:
         self.__create_child(self.top, self.data[top_name], raw_data)
 
     def __create_child(self, parent, subtree, raw_data):
-
+        # Some .info.json files may not include an upload_date.
+        if raw_data.get("upload_date") is None:
+            date = dt.datetime.fromtimestamp(raw_data["epoch"])
+            raw_data["upload_date"] = date.strftime("%Y%m%d")
+        
         # Check if current node is a list
         if isinstance(subtree, list):
 
@@ -95,4 +99,4 @@ class Nfo:
 
 
 def get_config(extractor):
-   return Nfo(extractor)
+    return Nfo(extractor.replace(":tab", ""))
