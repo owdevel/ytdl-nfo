@@ -34,12 +34,12 @@ def main():
 
                     path_no_ext = os.path.splitext(file_path)[0]
                     info_re = r".info$"
-                    if re.search(info_re):
+                    if re.search(info_re, file_name):
                         path_no_ext = re.sub(info_re, '', path_no_ext)
 
                     if args.overwrite or not os.path.exists(path_no_ext + ".nfo"):
                         print(
-                            f'Processing {file_path} with extractor {args.extractor}')
+                            f'Processing {args.input} with {extractor_str} extractor')
                         file = Ytdl_nfo(file_path, args.extractor)
                         file.process()
                         file.write_nfo()
