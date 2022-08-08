@@ -14,7 +14,7 @@ def main():
     parser.add_argument('-w', '--overwrite', action="store_true",
                         help='Overwrite existing NFO files')
     parser.add_argument(
-        '--regex', type=str, help='Specify regex search string to match files', default=r".json$")
+        '--regex', type=str, help='Specify regex search string to match files', default=r".+\.info\.json$")
     parser.add_argument('--config', help='Prints the path to the config directory',
                         action='version', version=f'{get_config_path()}')
     args = parser.parse_args()
@@ -30,12 +30,12 @@ def main():
         for root, dirs, files in os.walk(args.input):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
-                if re.search(args.regex, file_name):
+                if re.match(args.regex, file_name):
 
                     path_no_ext = os.path.splitext(file_path)[0]
-                    info_re = r".info$"
-                    if re.search(info_re):
-                        path_no_ext = re.sub(info_re, '', path_no_ext)
+                    info_re = r".+\.info$"
+                    if re.match(info_re):
+                        path_no_ext = re.sub('.info', '', path_no_ext)
 
                     if args.overwrite or not os.path.exists(path_no_ext + ".nfo"):
                         print(
