@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ytdl-nfo"
-version = "0.2.2"
+version = "0.2.3"
 description = "Utility to convert youtube-dl/yt-dlp json metadata to .nfo"
 authors = ["Owen <owdevel@gmail.com>"]
 license = "Unlicense"
