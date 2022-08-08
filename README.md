@@ -6,36 +6,34 @@
 
 **Warning**
 This package is still in early stages and breaking changes may be introduced.
+### NOTE: youtube-dl derivatives
+This package was originally built for youtube-dl, however the aim is to be compatible with related forks as well. Currently these are:
+- [youtube-dl](https://github.com/ytdl-org/youtube-dl)
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp)
+
 
 ## Installation
-Requirements: Python 3.6
+Requirements: Python 3.8
 ### Python 3 pipx (recommended)
-[pipx](https://github.com/pipxproject/pipx) is tool that installs a package and its dependiencies in an isolated environment. This is useful to not affect existing packages or installs. Visit their [github page](https://github.com/pipxproject/pipx) to learn more and for installation instructions.
+[pipx](https://github.com/pipxproject/pipx) is tool that installs a package and its dependencies in an isolated environment.
 
-1. Ensure Python 3.6 and [pipx](https://github.com/pipxproject/pipx) is installed
-2. Run the following command to install with pipx
-``` bash
-pipx install git+https://github.com/owdevel/ytdl_nfo.git
-```
+1. Ensure Python 3.8 and [pipx](https://github.com/pipxproject/pipx) is installed
+2. Install with `pipx install ytdl-nfo`
 
 ### Python 3 pip
-1. Ensure Python 3.6 is installed
-2. Run the following command to install with pip
-```bash
-pip install git+https://github.com/owdevel/ytdl_nfo.git
-```
+1. Ensure Python 3.8 is installed
+2. Install with `pip install ytdl-nfo`
 
 ### Package from source
-1. Ensure Python 3.6 is installed
+1. Ensure Python 3.8 and [Python Poetry](https://python-poetry.org/) is installed
 2. Clone the repo using `git clone https://github.com/owdevel/ytdl_nfo.git`
-3. Cd into the directory
-4. Install requirements using pip `pip install -r requirements.txt`
-5. Install the package with `pip install .`
+3. Create a dev environment with `poetry install`
+3. Build with `poetry build`
+4. Install from the `dist` directory with `pip install ./dist/ytdl_nfo-x.x.x.tar.gz`
 
-#### Run without packaging (dev)
-1. Perform steps 1-4 of package from source
-2. Ensure the current working directory is set to the cloned folder
-3. Run with `python -m ytdl_nfo`
+### Development Environment
+1. Perform steps 1-3 of package from source
+2. Run using `poetry run ytdl-nfo` or use `poetry shell` to enter the virtual env
 
 
 ## Usage
@@ -74,9 +72,11 @@ Coming Soon...
 
 ## Todo
 - [ ] Add try catches to pretty print errors
-- [ ] Recursive folder searching
 - [ ] Documentation and templates for creating custom extractors
-- [ ] Add package to pypi
+- [ ] Documentation of CLI arguments
+- [x] Recursive folder searching
+- [x] Add package to pypi
 
 ## Authors Note
-This is a small project I started to learn how to use python packaging system whilst providing some useful functionality for my home server setup. Feel free to contact me at owdevel@gmail.com with any feedback, suggestions or criticisms. Hope you have a great day :).
+This is a small project I started to learn how to use python packaging system whilst providing some useful functionality for my home server setup.
+Issues/pull requests and constructive criticism is welcome.
