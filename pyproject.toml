@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "ytdl-nfo"
+version = "0.1.0"
+description = "Utility to convert youtube-dl/yt-dlp json metadata to .nfo"
+authors = ["Owen <owdevel@gmail.com>"]
+license = "Unlicense"
+repository = "https://github.com/owdevel/ytdl-nfo"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+PyYAML = "^6.0"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^5.0.4"
+autopep8 = "^1.6.0"
+
+[tool.poetry.scripts]
+ytdl-nfo = "ytdl_nfo:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

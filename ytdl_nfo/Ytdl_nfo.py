@@ -2,6 +2,7 @@ import os
 import json
 from .nfo import get_config
 
+
 class Ytdl_nfo:
     def __init__(self, file_path, extractor=None):
         self.path = file_path
@@ -14,7 +15,7 @@ class Ytdl_nfo:
         self.extractor = extractor
         if extractor is None:
             self.extractor = self.data['extractor'].lower()
-        
+
         if file_path.endswith(".info.json"):
             self.filename = file_path[:-10]
         else:
@@ -32,5 +33,3 @@ class Ytdl_nfo:
 
     def get_nfo(self):
         return self.nfo.get_nfo()
-
-
