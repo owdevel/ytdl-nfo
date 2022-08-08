@@ -25,7 +25,6 @@ def main():
         print(f'Processing {args.input} with {extractor_str} extractor')
         file = Ytdl_nfo(args.input, args.extractor)
         file.process()
-        file.write_nfo()
     else:
         for root, dirs, files in os.walk(args.input):
             for file_name in files:
@@ -42,7 +41,6 @@ def main():
                             f'Processing {args.input} with {extractor_str} extractor')
                         file = Ytdl_nfo(file_path, args.extractor)
                         file.process()
-                        file.write_nfo()
 
 
 def get_config_path():
