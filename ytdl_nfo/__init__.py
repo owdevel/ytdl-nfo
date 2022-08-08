@@ -14,7 +14,7 @@ def main():
     parser.add_argument('-w', '--overwrite', action="store_true",
                         help='Overwrite existing NFO files')
     parser.add_argument(
-        '--regex', type=str, help='Specify regex search string to match files', default=r".json$")
+        '--regex', type=str, help='Specify regex search string to match files', default=r"\.info\.json$")
     parser.add_argument('--config', help='Prints the path to the config directory',
                         action='version', version=f'{get_config_path()}')
     args = parser.parse_args()
