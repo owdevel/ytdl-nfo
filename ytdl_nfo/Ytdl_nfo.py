@@ -24,9 +24,6 @@ class Ytdl_nfo:
         self.nfo = get_config(self.extractor)
 
     def process(self):
-        if self.data['_type'] != "video":
-            print(f'{self.filename} is not a video metadata file, Skipping')
-            return False
 
         self.nfo.generate(self.data)
         self.write_nfo()
