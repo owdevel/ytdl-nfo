@@ -15,7 +15,7 @@ class Nfo:
             with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
                 self.data = yaml.load(f, Loader=yaml.FullLoader)
         except FileNotFoundError:
-            print(f"No config available for extractor {extractor}")
+            print(f"Error: No config available for extractor {extractor}")
     
     def config_ok(self):
         return self.data is not None
