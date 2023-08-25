@@ -38,7 +38,7 @@ def main():
 
                     if args.overwrite or not os.path.exists(path_no_ext + ".nfo"):
                         print(
-                            f'Processing {args.input} with {extractor_str} extractor')
+                            f'Processing {file_path} with {extractor_str} extractor')
                         file = Ytdl_nfo(file_path, args.extractor)
                         file.process()
 
