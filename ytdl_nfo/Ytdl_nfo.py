@@ -32,6 +32,8 @@ class Ytdl_nfo:
             data_filename = self.data.get('_filename')
             if isinstance(data_filename, str):
                 self.filename = os.path.splitext(data_filename)[0]
+        if self.filename is None:
+            self.filename = file_path
 
         self.nfo = get_config(self.extractor)
 
