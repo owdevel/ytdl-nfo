@@ -113,7 +113,4 @@ class Nfo:
 
 
 def get_config(extractor):
-    if isinstance(extractor, str):
-        return Nfo(extractor.replace(":tab", ""))
-    else:
-        return None
+    return Nfo(extractor.replace(":tab", ""))

@@ -34,22 +34,28 @@ class Ytdl_nfo:
                 self.filename = os.path.splitext(data_filename)[0]
         if self.filename is None:
             self.filename = file_path
-
-        self.nfo = get_config(self.extractor)
-
+        
+        if isinstance(self.extractor, str):
+            self.nfo = get_config(self.extractor)
+        else:
+            self.nfo = None
+    
     def process(self):
-        if not self.input_ok or not self.nfo.config_ok():
+        if not self.input_ok or self.nfo is None or not self.nfo.config_ok():
             return False
         self.nfo.generate(self.data)
         self.write_nfo()
         return True
 
     def write_nfo(self):
-        if self.nfo.generated_ok():
+        if self.nfo is not None and self.nfo.generated_ok():
             self.nfo.write_nfo(f'{self.filename}.nfo')
 
     def print_data(self):
         print(json.dumps(self.data, indent=4, sort_keys=True))
 
     def get_nfo(self):
-        return self.nfo.get_nfo()
+        if self.nfo is not None:
+            return self.nfo.get_nfo()
+        else:
+            return None
