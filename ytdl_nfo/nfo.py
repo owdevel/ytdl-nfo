@@ -8,9 +8,21 @@ from xml.dom import minidom
 
 class Nfo:
     def __init__(self, extractor):
-        with pkg_resources.resource_stream("ytdl_nfo", f"configs/{extractor}.yaml") as f:
-            self.data = yaml.load(f, Loader=yaml.FullLoader)
-
+        self.data = None
+        self.top = None
+        try:
+            extractor_path = f"configs/{extractor}.yaml"
+            with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
+                self.data = yaml.load(f, Loader=yaml.FullLoader)
+        except FileNotFoundError:
+            print(f"Error: No config available for extractor {extractor}")
+    
+    def config_ok(self):
+        return self.data is not None
+    
+    def generated_ok(self):
+        return self.top is not None
+    
     def generate(self, raw_data):
 
         # There should only be one top level node
