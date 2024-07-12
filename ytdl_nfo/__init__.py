@@ -32,9 +32,8 @@ def main():
                 if re.search(args.regex, file_name):
 
                     path_no_ext = os.path.splitext(file_path)[0]
-                    info_re = r".info$"
-                    if re.search(info_re, file_name):
-                        path_no_ext = re.sub(info_re, '', path_no_ext)
+
+                    path_no_ext = re.sub(r".info$", '', path_no_ext)
 
                     if args.overwrite or not os.path.exists(path_no_ext + ".nfo"):
                         print(
