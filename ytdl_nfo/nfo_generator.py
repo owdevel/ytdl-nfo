@@ -103,11 +103,18 @@ class NFOGenerator:
 
     @property
     def default_nfo_name(self) -> str:
-        """Generate a default NFO file name by stripping all extensions from the JSON file path.
+        """Generate a default NFO file name by stripping extensions from the JSON file path.
 
         Returns:
             str: The name of the JSON file, minus any suffixes
         """
+        # Handle the most common case where the suffix is the default '.info.json'
+        if self.json_file.name.endswith(".info.json"):
+            return self.json_file.name[:-10]
+
+        # Otherwise, try to auto-detect and strip any suffixes
+        # Note: This was removed as the default because it will replace part of the filename if the name contains
+        # periods and no spaces (e.g., if the `--restrict-filenames` flag was used)
         suffixes: str = "".join(self.json_file.suffixes)
 
         return self.json_file.name[: len(suffixes) * -1]
