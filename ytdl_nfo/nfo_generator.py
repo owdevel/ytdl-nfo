@@ -1,16 +1,14 @@
-"""TODO"""
+"""Defines the NFOGenerator class."""
 
 from __future__ import annotations
 
 # Standard Libraries
 import json
+import logging
 import re
-from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-from logging import Logger
-from logging import getLogger
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -19,13 +17,14 @@ import pkg_resources
 from yaml import safe_load
 
 # Internal Libraries
+from ytdl_nfo.nfo import InvalidConfigError
 from ytdl_nfo.nfo import NFOConfig
 
 if TYPE_CHECKING:
     # Standard Libraries
     from pathlib import Path
 
-logger: Logger = getLogger()
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 # YouTube timestamps appear to use Pacific Standard Time (PST)
@@ -34,38 +33,45 @@ PST = timezone(timedelta(hours=-8))
 
 
 class NFOGenerator:
+    """Defines a class used to generate Kodi-compatible NFO files."""
+
     def __init__(self, json_file: Path, *, extractor_name: str | None = None, overwrite: bool = False) -> None:
+        """Initialize an NFOGenerator object.
+
+        Args:
+            json_file (Path): The JSON file to process
+            extractor_name (str | None, optional): The specific extractor config to use; defaults to None
+            overwrite (bool, optional): Whether to overwrite existing NFO files; defaults to False
+        """
         nfo_config: NFOConfig
         self.json_file: Path = json_file
 
         # ---------------------------- Load JSON Metadata ---------------------------- #
 
-        # Use a defaultdict to return an empty string rather than raising a KeyError, if an extractor config references
-        # a metadata field that does not exist
-        # Reference: https://stackoverflow.com/a/21754294
-        metadata: dict[str, Any] = defaultdict(lambda: "")
-
         try:
-            # Read metadata from the JSON file
-            metadata.update(json.loads(json_file.read_text(encoding="utf-8")))
+            # Read metadata from the JSON source file
+            metadata: dict[str, Any] = json.loads(json_file.read_text(encoding="utf-8"))
 
-            # Some .info.json files may not include an upload_date
-            metadata.setdefault("upload_date", datetime.fromtimestamp((metadata["epoch"]), tz=PST).strftime("%Y%m%d"))
+            if "epoch" in metadata:
+                # Ensure upload_date is set
+                metadata.setdefault(
+                    "upload_date", datetime.fromtimestamp((metadata["epoch"]), tz=PST).strftime("%Y%m%d")
+                )
         except json.JSONDecodeError:
             logger.error("Failed to parse JSON from: %s", str(json_file))
             return
 
         # ------------------------ Set / Update Extractor Name ----------------------- #
 
-        # Reset extractor name, if applicable
+        # Override default extractor name, if set via CLI argument
         if not isinstance((extractor_name := extractor_name or metadata.get("extractor")), str):
-            logger.error("Invalid extractor: %s", extractor_name)
+            logger.error("Expected extractor name to be a string but was a '%s'", type(extractor_name))
             return
 
         # Normalize the extractor name
         extractor_name = re.sub(r"[:?*/\\]", "_", extractor_name.lower())
 
-        logger.info("Processing %s with %s extractor", str(json_file), extractor_name)
+        logger.info("Processing '%s' with '%s' extractor", str(json_file), extractor_name)
 
         # --------------------------- Initialize NFO Config -------------------------- #
 
@@ -76,7 +82,10 @@ class NFOGenerator:
             with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
                 nfo_config = NFOConfig(safe_load(f), metadata)
         except FileNotFoundError:
-            logger.error("No NFO config found for extractor %s", extractor_name)
+            logger.error("No NFO config found for extractor '%s'", extractor_name)
+            return
+        except InvalidConfigError as e:
+            logger.error("Invalid extractor config: %s", e)
             return
 
         # Set the NFO file name based on the '_filename' metadata attribute or the JSON file name
@@ -90,13 +99,26 @@ class NFOGenerator:
         # ---------------------- Generate and Write the NFO File --------------------- #
 
         self.nfo_path.write_text(nfo_config.xml_str, encoding="utf-8")
+        logger.info("Finished writing '%s'", str(self.nfo_path))
 
     @property
     def default_nfo_name(self) -> str:
+        """Generate a default NFO file name by stripping all extensions from the JSON file path.
+
+        Returns:
+            str: The name of the JSON file, minus any suffixes
+        """
         suffixes: str = "".join(self.json_file.suffixes)
 
         return self.json_file.name[: len(suffixes) * -1]
 
     @property
     def nfo_path(self) -> Path:
+        """Generates the NFO output file path.
+
+        NFO files will be placed next to the source JSON file.
+
+        Returns:
+            Path: The NFO output file path
+        """
         return self.json_file.with_name(f"{self.nfo_filename}.nfo")

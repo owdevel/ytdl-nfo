@@ -1,16 +1,19 @@
+_filename: 'episode'
 episodedetails:
-  - genre!: "{categories}"
-  - actor>name!: "{cast}"
-  - really>nested>actor>name>list!: "{cast}"
-  - this>should>be>invalid: "{upload_date}"
-  - normal: "{upload_date}"
+  - genre!: '{categories}'
+  - actor>name!: '{cast}'
+  - really>nested>actor>name>list!: '{cast}'
+  # - this>should>be>invalid: '{upload_date}'
+  - normal: '{upload_date}'
   - converted>date:
-      convert: "date"
-      input_f: "%Y%m%d"
-      output_f: "%Y-%m-%d"
-      value: "{upload_date}"
+      converter:
+        data_type: 'date'
+        input_format: '%Y%m%d'
+        output_format: '%Y-%m-%d'
+      value: '{upload_date}'
   - nested>date!:
-      convert: "date"
-      input_f: "%Y%m%d"
-      output_f: "%Y-%m-%d"
-      value: "{nested_dates}"
+      converter:
+        data_type: 'date'
+        input_format: '%Y%m%d'
+        output_format: '%Y-%m-%d'
+      value: '{nested_dates}'

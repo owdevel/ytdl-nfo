@@ -23,16 +23,16 @@ def sample_config() -> dict[str, list[dict[str, Any]]]:
             {
                 "converted>date": {
                     "convert": "date",
-                    "input_f": "%Y%m%d",
-                    "output_f": "%Y-%m-%d",
+                    "input_format": "%Y%m%d",
+                    "output_format": "%Y-%m-%d",
                     "value": "{upload_date}",
                 }
             },
             {
                 "nested>date!": {
                     "convert": "date",
-                    "input_f": "%Y%m%d",
-                    "output_f": "%Y-%m-%d",
+                    "input_format": "%Y%m%d",
+                    "output_format": "%Y-%m-%d",
                     "value": "{nested_dates}",
                 }
             },

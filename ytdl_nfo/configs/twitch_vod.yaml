@@ -2,13 +2,14 @@ episodedetails:
   - title: '{title}'
   - showtitle: '{uploader}'
   - uniqueid:
-      attr:
+      attrs:
+        default: 'true'
         type: 'twitchvod'
-        default: "true"
       value: '{id}'
   - plot: '{fulltitle}'
   - premiered:
-      convert: 'date'
-      input_f: '%Y%m%d'
-      output_f: '%Y-%m-%d'
+      converter:
+        data_type: 'date'
+        input_format: '%Y%m%d'
+        output_format: '%Y-%m-%d'
       value: '{upload_date}'
