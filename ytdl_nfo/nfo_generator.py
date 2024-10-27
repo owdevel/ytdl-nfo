@@ -71,7 +71,7 @@ class NFOGenerator:
         # Normalize the extractor name
         extractor_name = re.sub(r"[:?*/\\]", "_", extractor_name.lower())
 
-        logger.info("Processing '%s' with '%s' extractor", str(json_file), extractor_name)
+        logger.debug("Processing '%s' with '%s' extractor", str(json_file), extractor_name)
 
         # --------------------------- Initialize NFO Config -------------------------- #
 
@@ -97,6 +97,7 @@ class NFOGenerator:
             return
 
         # ---------------------- Generate and Write the NFO File --------------------- #
+        logger.info("Creating '%s' using '%s' extractor", str(self.nfo_path), extractor_name)
 
         self.nfo_path.write_text(nfo_config.xml_str, encoding="utf-8")
         logger.info("Finished writing '%s'", str(self.nfo_path))
