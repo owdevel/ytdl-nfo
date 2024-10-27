@@ -108,8 +108,11 @@ class NFOField:
             ]
 
     def _convert(self, item: str, data_type: str, input_format: str, output_format: str, *_: str) -> str:
-        if data_type == "date":
-            item = datetime.strptime(item, input_format).strftime(output_format)  # noqa: DTZ007
+        try:
+            if data_type == "date":
+                item = datetime.strptime(item, input_format).strftime(output_format)  # noqa: DTZ007
+        except ValueError as e:
+            logger.error("Conversion error: %s", e)
 
         return item
 
