@@ -93,7 +93,7 @@ class NFOGenerator:
 
         # Abort if NFO file exists and overwrite was not specified
         if self.nfo_path.exists() and not overwrite:
-            logger.warning("Skipping %s; NFO file already exists, and 'overwrite' is disabled", str(self.nfo_path))
+            logger.debug("Skipping %s; NFO file already exists, and 'overwrite' is disabled", str(self.nfo_path))
             return
 
         # ---------------------- Generate and Write the NFO File --------------------- #
