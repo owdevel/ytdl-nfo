@@ -1,139 +1,240 @@
-import yaml
+"""Defines NFOConfig and NFOField classes used to parse an extractor config and generate the NFO XML data."""
+
+from __future__ import annotations
+
+# Standard Libraries
 import ast
-import datetime as dt
 import xml.etree.ElementTree as ET
-import pkg_resources
 from collections import defaultdict
-from xml.dom import minidom
+from datetime import datetime
+from logging import Logger
+from logging import getLogger
+from typing import Any
+from typing import TypedDict
+from typing import cast
+
+# Third-party Libraries
+from defusedxml.minidom import parseString
+
+logger: Logger = getLogger()
 
 
-class Nfo:
-    def __init__(self, extractor, file_path):
-        self.data = None
-        self.top = None
+IDENT_SIZE: int = 4
+"""The number of spaces to indent nested XML tags when pretty-printing."""
+
+# ============================================================================ #
+#                                   Utilities                                  #
+# ============================================================================ #
+
+
+def format_value(template: str, metadata: dict[str, Any]) -> str:
+    """Formats the given template string using metadata from the JSON file.
+
+    Args:
+        template (str): A format string template
+        metadata (dict[str, Any]): Data from the JSON source file, used to populate the field
+
+    Returns:
+        str: The formatted string
+    """
+    # Use a defaultdict to return an empty string, rather than raising a KeyError, if an extractor config references
+    # a metadata field that does not exist
+    # Reference: https://stackoverflow.com/a/21754294
+    metadata_default: dict[str, Any] = defaultdict(lambda: "")
+    metadata_default.update(metadata)
+
+    return template.format_map(metadata_default)
+
+
+# ============================================================================ #
+#                                 Type Classes                                 #
+# ============================================================================ #
+
+
+class Converter(TypedDict):
+    """Define data types for the 'converter' data structure."""
+
+    data_type: str
+    input_format: str
+    output_format: str
+
+
+class NFOFieldType(TypedDict, total=False):
+    """Define data types for an NFOConfig field data structure."""
+
+    attrs: dict[str, str]
+    converter: Converter
+    value: str
+
+
+class InvalidConfigError(Exception):
+    """A custom error class for reporting issues with an extractor config."""
+
+
+# ============================================================================ #
+#                                  Dataclasses                                 #
+# ============================================================================ #
+
+
+class NFOField:
+    """A logical representation of a field in an NFO extractor config."""
+
+    attrs: dict[str, str]
+    tag_path: str
+    value: list[str]
+
+    def __init__(self, tag_path: str, field_info: NFOFieldType, metadata: dict[str, Any]) -> None:
+        """Initialize an NFOField object.
+
+        Args:
+            tag_path (str): The name of the NFO XML tag to use for the field
+            field_info (NFOFieldType): Information about the field (e.g., the value, any attributes to include, and
+                an optional converter to apply)
+            metadata (dict[str, Any]): Data from the JSON source file, used to populate the field
+        """
+        self.tag_path = tag_path.rstrip("!")
+        self.attrs = field_info.get("attrs", {})
+
+        value: str = format_value(field_info.get("value", ""), metadata)
+
+        # If tag_path ends with a '!', the value should be deserialized to a Python list
+        # If the value is empty but supposed to be a list, default to "[]" to prevent the deserializer from breaking
+        self.value = ast.literal_eval(value or "[]") if tag_path[-1] == "!" else [value]
+
+        # If a converter is specified, apply it to each element in the value list
+        if field_info.get("converter"):
+            self.value = [
+                self._convert(item=item, **cast(Converter, field_info.get("converter"))) for item in self.value
+            ]
+
+    def _convert(self, item: str, data_type: str, input_format: str, output_format: str, *_: str) -> str:
         try:
-            extractor_path = f"configs/{extractor}.yaml"
-            with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
-                self.data = yaml.load(f, Loader=yaml.FullLoader)
-        except FileNotFoundError:
-            print(f"Error: No config available for extractor {extractor} in file {file_path}")
-    
-    def config_ok(self):
-        return self.data is not None
-    
-    def generated_ok(self):
-        return self.top is not None
-    
-    def generate(self, raw_data):
-
-        # There should only be one top level node
-        top_name = list(self.data.keys())[0]
-        self.top = ET.Element(top_name)
-
-        # Recursively generate the rest of the NFO
-        try:
-            self.__create_child(self.top, self.data[top_name], raw_data)
+            if data_type == "date":
+                item = datetime.strptime(item, input_format).strftime(output_format)  # noqa: DTZ007
         except ValueError as e:
-            print(e)
-            return False
+            logger.error("Conversion error: %s", e)
 
-        return True
+        return item
 
-    def __create_child(self, parent, subtree, raw_data):
-        # Some .info.json files may not include an upload_date.
-        if raw_data.get("upload_date") is None:
-            date = dt.datetime.fromtimestamp(raw_data["epoch"])
-            raw_data["upload_date"] = date.strftime("%Y%m%d")
-        
-        # Allow missing keys to give an empty string instead of
-        # a KeyError when formatting values
-        # https://stackoverflow.com/a/21754294
-        format_dict = defaultdict(lambda: "")
-        format_dict.update(raw_data)
 
-        # Check if current node is a list
-        if isinstance(subtree, list):
+class NFOConfig:
+    """A logical representation of an NFO extractor config."""
 
-            # Process individual nodes
-            for child in subtree:
-                self.__create_child(parent, child, raw_data)
+    filename: str = ""
+    root_tag: str
+    fields: list[NFOField]
+    metadata: dict[str, Any]
+
+    def __init__(self, config: dict[str, list[dict[str, str | NFOFieldType]]], metadata: dict[str, Any]) -> None:
+        """Initializes an NFOConfig object.
+
+        Args:
+            config (dict[str, list[dict[str, str  |  NFOFieldType]]]): The data from an NFO extractor config
+            metadata (dict[str, Any]): Data from a JSON source file, used to populate the field of the config
+        """
+        self._validate(config)
+
+        # Allow the config to specify the name of the NFO output file
+        if "_filename" in config:
+            self.filename = format_value(str(config["_filename"]), metadata)
+
+        self.metadata = metadata
+        self.root_tag = next(key for key in config if not key.startswith("_"))
+
+        # Convert each item beneath the root_tag to an NFOField object for easier processing
+        self.fields = [
+            NFOField(
+                tag_path=tag,
+                field_info=field_info if isinstance(field_info, dict) else NFOFieldType(value=field_info),
+                metadata=metadata,
+            )
+            for elem in config[self.root_tag]
+            for tag, field_info in elem.items()
+        ]
+
+    def _validate(self, config: dict[str, Any]) -> None:
+        """Validate the structure of the config.
+
+        Args:
+            config (dict[str, Any]): The config data
+
+        Raises:
+            InvalidConfigException: If there is no top-level key
+            InvalidConfigException: If there is more than one non-metadata top-level key
+            InvalidConfigException: If the top-level key does not contain a list of dictionaries
+        """
+        # Get a list of top-level keys, ignoring metadata keys (i.e., ones starting with '_')
+        keys: list[str] = [key for key in config if not key.startswith("_")]
+        msg: str
+
+        if len(keys) == 0:
+            msg = "No top-level key detected"
+            raise InvalidConfigError(msg)
+
+        if len(keys) > 1:
+            msg = "Multiple top-level keys detected; only one non-metadata key is supported"
+            raise InvalidConfigError(msg)
+
+        root_tag: str = keys[0]
+
+        if isinstance(config[root_tag], list) and any(
+            field for field in config[root_tag] if not isinstance(field, dict)
+        ):
+            msg = "The top-level key does not contain a list of dictionaries"
+            raise InvalidConfigError(msg)
+
+    @property
+    def xml_str(self) -> str:
+        """Generate an XML representation of the JSON data, according to the NFO extractor config.
+
+        Returns:
+            str: The NFO XML data
+        """
+        self.top = ET.Element(self.root_tag)
+
+        # Recursively generate the rest of the NFO XML
+        try:
+            self._create_child_element(self.top, self.fields, self.metadata)
+        except ValueError as e:
+            logger.exception(e)
+
+        return parseString(ET.tostring(self.top, encoding="utf-8")).toprettyxml(indent=" " * IDENT_SIZE)
+
+    def _create_child_element(
+        self,
+        parent_element: ET.Element,
+        subtree_data: NFOField | list[NFOField],
+        metadata: dict[str, Any],
+    ) -> None:
+        """A private helper method, recursively called by xml_str(), to generate XML elements.
+
+        Args:
+            parent_element (ET.Element): The XML element under which the current tag should be nested
+            subtree_data (NFOField | list[NFOField]): Data about the current and any child elements
+            metadata (dict[str, Any]): Data from a JSON source file, used to populate element attributes
+        """
+        # If the subtree_data is a list, recursively process each field
+        if isinstance(subtree_data, list):
+            for field in subtree_data:
+                self._create_child_element(parent_element, field, metadata)
             return
 
-        # Process data in child node
-        child_name = list(subtree.keys())[0]
+        element: ET.Element = parent_element
+        field: NFOField = subtree_data
+        tag: str
 
-        table = child_name[-1] == '!'
+        # Create any intermediary elements
+        for tag in field.tag_path.split(">")[:-1]:
+            element = ET.SubElement(element, tag)
 
-        attributes = {}
-        children = []
+        # Create the final ("leaf") element(s)
+        parent_element = element
+        tag = field.tag_path.split(">")[-1]
 
-        # Check if attributes are present
-        if isinstance(subtree[child_name], dict):
-            attributes = subtree[child_name]
-            value = subtree[child_name]['value']
-
-            # Set children if value flag
-            if table:
-                children = ast.literal_eval(value.format_map(format_dict))
-            else:
-                children = [value.format_map(format_dict)]
-
-            if 'convert' in attributes.keys():
-                target_type = attributes['convert']
-                input_f = attributes['input_f']
-                output_f = attributes['output_f']
-
-                for i in range(len(children)):
-                    if target_type == 'date':
-                        date = dt.datetime.strptime(children[i], input_f)
-                        children[i] = date.strftime(output_f)
-
-        # Value only
-        else:
-            if table:
-                children = ast.literal_eval(
-                    subtree[child_name].format_map(format_dict))
-            else:
-                children = [subtree[child_name].format_map(format_dict)]
-
-        # Add the child node(s)
-        child_name = child_name.rstrip('!')
-
-        for value in children:
-            sub_parent = parent
-            sub_name = child_name
-            sub_index = sub_name.find('>')
-            while sub_index > -1:
-                if not table:
-                    raise ValueError(f'Error with key {sub_name}: > deliminator can only be used for lists')
-                sub_parent = ET.SubElement(sub_parent, sub_name[:sub_index])
-                sub_name = sub_name[sub_index + 1:]
-                sub_index = sub_name.find('>')
-
-            child = ET.SubElement(sub_parent, sub_name)
-            child.text = value
+        for item in field.value:
+            element = ET.SubElement(parent_element, tag)
+            element.text = item
 
             # Add attributes
-            if 'attr' in attributes.keys():
-                for attribute, attr_value in attributes['attr'].items():
-                    child.set(attribute, attr_value.format_map(format_dict))
-
-    def print_nfo(self):
-        xmlstr = minidom.parseString(ET.tostring(
-            self.top, 'utf-8')).toprettyxml(indent="    ")
-        print(xmlstr)
-
-    def write_nfo(self, filename):
-        xmlstr = minidom.parseString(ET.tostring(
-            self.top, 'utf-8')).toprettyxml(indent="    ")
-        with open(filename, 'wt', encoding="utf-8") as f:
-            f.write(xmlstr)
-
-    def get_nfo(self):
-        xmlstr = minidom.parseString(ET.tostring(
-            self.top, 'utf-8')).toprettyxml(indent="    ")
-        return xmlstr
-
-
-def get_config(extractor, file_path):
-    return Nfo(extractor, file_path)
+            for attribute, attr_value in field.attrs.items():
+                element.set(attribute, format_value(attr_value, metadata))

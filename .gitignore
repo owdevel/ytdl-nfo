@@ -136,3 +136,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Custom
+.ruff_cache
+.vscode/launch.json

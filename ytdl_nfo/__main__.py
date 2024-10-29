@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+"""Configures the application to be run as a Python module."""
 
-import ytdl_nfo
+from . import main
 
-if __name__ == '__main__':
-    ytdl_nfo.main()
+if __name__ == "__main__":
+    main()

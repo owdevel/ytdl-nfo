@@ -1,60 +1,81 @@
-import argparse
-import os
+"""Parses command-line interface (CLI) arguments and invoke the NFO generator for each specified or matching file."""
+
+from __future__ import annotations
+
+# Standard Libraries
+import logging
 import re
+from argparse import ArgumentParser
+from argparse import Namespace
+from pathlib import Path
 
-from .Ytdl_nfo import Ytdl_nfo
+from .nfo_generator import NFOGenerator
+
+# ---------------------------------- Logging --------------------------------- #
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)-7s] - %(message)s"))
+
+logging.basicConfig(level=logging.NOTSET, handlers=[console_handler])
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="ytdl_nfo, a youtube-dl utility to convert the output of  'youtube-dl --write-info-json' to an NFO for use with Kodi, Plex, Emby, Jellyfin, etc."
+def parse_arguments() -> Namespace:
+    """Parse command-line interface (CLI) arguments.
+
+    Returns:
+        Namespace: An argparse Namespace object containing the values of command-line arguments
+    """
+    parser: ArgumentParser = ArgumentParser(
+        prog="ytdl-nfo",
+        description="A utility for converting metadata, saved using the youtube-dl '--write-info-json' flag, to an "
+        "NFO file compatible with Kodi, Plex, Emby, Jellyfin, etc.",
     )
     parser.add_argument(
-        "--config",
-        help="Show the path to the config directory",
+        "--show-config-dir",
         action="version",
-        version=f"{get_config_path()}",
+        version=str(Path(__file__) / "configs"),
+        help="Show the path to the config directory",
     )
-    parser.add_argument("-e", "--extractor", help="Specify specific extractor")
+    parser.add_argument(
+        "-e",
+        "--extractor",
+        help="The extractor config to use; allows overriding the extractor specified in the JSON file",
+    )
     parser.add_argument(
         "-r",
         "--regex",
         type=str,
-        default=r".json$",
-        help="A regular expression used to search for JSON source files",
+        default=r".+\.info\.json$",
+        help="A regular expression used to search for JSON info files",
     )
-    parser.add_argument(
-        "-w", "--overwrite", action="store_true", help="Overwrite existing NFO files"
-    )
+    parser.add_argument("-w", "--overwrite", action="store_true", help="Overwrite existing NFO files")
     parser.add_argument(
         "input",
-        metavar="JSON_FILE",
-        type=str,
-        help="JSON file to convert or directory to process recursively",
+        metavar="JSON_FILE_PATH",
+        nargs="+",
+        type=Path,
+        help="One or more JSON files or directories to process; directories will be processed recursively",
     )
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    extractor_str = args.extractor if args.extractor is not None else "file specific"
 
-    if os.path.isfile(args.input):
-        print(f"Processing {args.input} with {extractor_str} extractor")
-        file = Ytdl_nfo(args.input, args.extractor)
-        file.process()
-    else:
-        for root, dirs, files in os.walk(args.input):
-            for file_name in files:
-                file_path = os.path.join(root, file_name)
-                if file_name.endswith(".live_chat.json"):
+def main() -> None:
+    """Parse CLI arguments and invoke the NFO generator for each specified or matching file."""
+    args: Namespace = parse_arguments()
+
+    for path in args.input:
+        if path.is_file():
+            NFOGenerator(json_file=path, extractor_name=args.extractor, overwrite=args.overwrite)
+        elif path.is_dir():
+            for file in path.rglob("*"):
+                if file.name.endswith(".live_chat.json"):
                     continue
-                if re.search(args.regex, file_name):
-                    file = Ytdl_nfo(file_path, args.extractor)
-                    if args.overwrite or not os.path.exists(file.get_nfo_path()):
-                        print(f"Processing {file_path} with {extractor_str} extractor")
-                        file.process()
+
+                if re.match(args.regex, file.name):
+                    NFOGenerator(json_file=file, extractor_name=args.extractor, overwrite=args.overwrite)
+        else:
+            logger.error("Path Not Found: %s", str(path))
 
 
-def get_config_path():
-    return os.path.join(os.path.dirname(__file__), "configs")
-
-
-__all__ = ["main", "Ytdl_nfo", "nfo"]
+__all__: list[str] = ["main", "NFOGenerator"]

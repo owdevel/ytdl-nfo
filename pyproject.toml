@@ -1,24 +1,154 @@
 [tool.poetry]
-name = "ytdl-nfo"
-version = "0.3.0"
-description = "Utility to convert youtube-dl/yt-dlp json metadata to .nfo"
-authors = ["Owen <owdevel@gmail.com>"]
-license = "Unlicense"
-repository = "https://github.com/owdevel/ytdl-nfo"
-readme = "README.md"
+  authors     = ["Owen <owdevel@gmail.com>"]
+  description = "Utility to convert youtube-dl/yt-dlp json metadata to .nfo"
+  license     = "Unlicense"
+  name        = "ytdl-nfo"
+  readme      = "README.md"
+  repository  = "https://github.com/owdevel/ytdl-nfo"
+  version     = "0.3.0"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-PyYAML = "^6.0"
-setuptools = "^70.2.0"
-
-[tool.poetry.dev-dependencies]
-flake8 = "^5.0.4"
-autopep8 = "^1.6.0"
+  PyYAML     = "^6.0"
+  defusedxml = "^0.7.1"
+  python     = "^3.8"
+  setuptools = "^70.2.0"
 
 [tool.poetry.scripts]
-ytdl-nfo = "ytdl_nfo:main"
+  ytdl-nfo = "ytdl_nfo:main"
+
+[tool.poetry.group.dev.dependencies]
+  isort  = "^5.13.2"
+  pytest = "^8.3.3"
+  ruff   = "^0.6.9"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+  build-backend = "poetry.core.masonry.api"
+  requires      = ["poetry-core>=1.0.0"]
+
+
+  # ============================================================================ #
+  #                                     isort                                    #
+  # ============================================================================ #
+
+  # Note: As of 2024-06-20, Ruff can do every listed here, with the exception of setting the `import_headings`. Keeping
+  # isort for now to handle continuous formatting, and using Ruff as a pre-commit and CI pipeline check
+
+[tool.isort]
+  # Reference: https://pycqa.github.io/isort/docs/configuration/options.html
+  atomic                                  = true
+  force_alphabetical_sort_within_sections = true
+
+  # Each import should be on a separate line to minimize merge conflicts (see
+  # [reorder_python_imports](https://github.com/asottile/reorder_python_imports#why-this-style)).
+  force_single_line = true
+  import_headings   = { stdlib = "Standard Libraries", thirdparty = "Third-party Libraries", firstparty = "Internal Libraries" }
+  known_first_party = ["ytdl-nfo"]
+
+  # This value must match the `line-length` option for `ruff`
+  line_length = 120
+  profile     = "black"
+
+
+  # ============================================================================ #
+  #                                     Ruff                                     #
+  # ============================================================================ #
+
+  # Reference:
+  #   - [Configuration](https://docs.astral.sh/ruff/configuration/)
+  #   - [Settings](https://docs.astral.sh/ruff/settings)
+  #   - [Rules](https://docs.astral.sh/ruff/rules/)
+
+[tool.ruff]
+  # Set the maximum line length to 120
+  line-length = 120
+
+  # Target Python 3.8
+  target-version = "py38"
+
+[tool.ruff.lint]
+  select = [
+    "A",    # flake8-builtins
+    "ANN",  # flake8-annotations
+    "ARG",  # flake8-unused-arguments
+    "B",    # flake8-bugbear
+    "BLE",  # flake8-blind-except
+    "C",    # mccabe (complexity)
+    "C4",   # flake8-comprehensions
+    "COM",  # flake8-commas
+    "D",    # pydocstyle
+    "DTZ",  # flake8-datetimez
+    "E",    # pycodestyle (errors)
+    "EM",   # flake8-errmsg
+    "ERA",  # eradicate
+    "EXE",  # flake8-executable
+    "F",    # Pyflakes
+    "FA",   # flake8-future-annotations
+    "FBT",  # flake8-boolean-trap
+    "FLY",  # flynt
+    "FURB", # refurb
+    "G",    # flake8-logging-format
+    "I",    # isort
+    "ICN",  # flake8-import-conventions
+    "INP",  # flake8-no-pep420
+    "ISC",  # flake8-implicit-str-concat
+    "N",    # pep8-naming
+    "PGH",  # pygrep-hooks
+    "PIE",  # flake8-pie
+    "PL",   # Pylint
+    "PT",   # flake8-pytest-style
+    "PTH",  # flake8-use-pathlib
+    "PYI",  # flake8-pyi
+    "Q",    # flake8-quotes
+    "RET",  # flake8-return
+    "RUF",  # Ruff-specific rules
+    "S",    # flake8-bandit
+    "SIM",  # flake8-simplify
+    "SLF",  # flake8-self
+    "T10",  # flake8-debugger
+    "T20",  # flake8-print - ingest currently prints to STDOUT to how processing status
+    "TCH",  # flake8-type-checking
+    "TD",   # flake8-todos
+    "UP",   # pyupgrade
+    "W",    # pycodestyle (warnings)
+  ]
+
+  ignore = [
+    "ANN101", # Missing type annotation for self in method (otherwise it's just t.Self)
+    "ANN102", # Missing type annotation for cls in classmethod
+    "COM812", # Trailing comma missing; ignored for compatibility with the Ruff formatter
+    "ISC001", # Implicitly concatenated string literals on one line; ignored for compatibility with the Ruff formatter
+  ]
+
+  # Allow fix for all enabled rules (when `--fix`) is provided.
+  # fixable   = ["ALL"] # Default setting
+  # unfixable = []      # Default setting
+
+[tool.ruff.lint.isort]
+
+  # Each import should be on a separate line to minimize merge conflicts (see
+  # [reorder_python_imports](https://github.com/asottile/reorder_python_imports#why-this-style)).
+  force-single-line = true
+  known-first-party = ["ytdl-nfo"]
+
+  # Unsupported Options (as of 2024-06-20):
+  #   import_headings   = { stdlib = "Standard Libraries", thirdparty = "Third-party Libraries", firstparty = "Internal Libraries" }
+
+# Ignore `E402` (import violations) in all `__init__.py` files, and in select subdirectories.
+[tool.ruff.lint.per-file-ignores]
+  "tests/**" = [
+    "D",    # Missing docstrings
+    "E402",
+    "S101", # Use of `assert`
+  ]
+  "tests/**/conftest.py" = [
+    "F401", # '[module]' imported but unused
+  ]
+
+[tool.ruff.lint.pydocstyle]
+  # Use Google-style docstrings (https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+  convention = "google"
+
+[tool.ruff.format]
+  # Enable auto-formatting of code examples in docstrings. Markdown,
+  # reStructuredText code/literal blocks and doctests are all supported.
+  docstring-code-format = true

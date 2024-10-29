@@ -1,0 +1,18 @@
+episodedetails:
+  - title: '{title}'
+  - showtitle: '{series}'
+  - season: '{season_number}'
+  - episode: '{episode_number}'
+  - premiered:
+      convert: 'date'
+      value: '{upload_date}'
+      input_f: '%Y%m%d'
+      output_f: '%Y'
+  - year:
+      convert: 'date'
+      value: '{upload_date}'
+      input_f: '%Y%m%d'
+      output_f: '%Y'
+  - plot: '{description}'
+  - runtime: '{duration}'
+  - genre: '{uploader}'
