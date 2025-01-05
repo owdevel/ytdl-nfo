@@ -32,6 +32,10 @@ class Nfo:
         # Recursively generate the rest of the NFO
         try:
             self.__create_child(self.top, self.data[top_name], raw_data)
+            #!
+            print("data[top_name]")
+            print(self.data[top_name])
+            print(self.data)
         except ValueError as e:
             print(e)
             return False
