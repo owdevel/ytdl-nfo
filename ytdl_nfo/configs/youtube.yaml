@@ -6,6 +6,7 @@ episodedetails:
         type: 'youtube'
         default: "true"
       value: '{id}'
+  - tag: '{tags}'
   - plot: '{description}'
   - premiered:
       convert: 'date'

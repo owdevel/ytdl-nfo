@@ -25,7 +25,6 @@ class Nfo:
         return self.top is not None
     
     def generate(self, raw_data):
-
         # There should only be one top level node
         top_name = list(self.data.keys())[0]
         self.top = ET.Element(top_name)
@@ -53,6 +52,9 @@ class Nfo:
 
         # Check if current node is a list
         if isinstance(subtree, list):
+            #!
+            print("IS LIST")
+            print(subtree)
 
             # Process individual nodes
             for child in subtree:

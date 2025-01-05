@@ -9,7 +9,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-PyYAML = "^6.0"
+PyYAML = "^6.0.1"
 setuptools = "^70.2.0"
 
 [tool.poetry.dev-dependencies]
