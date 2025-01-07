@@ -54,8 +54,8 @@ class Nfo:
         format_dict = defaultdict(lambda: "")
         format_dict.update(raw_data)
         #!
-        print("////////////format_dict")
-        print(format_dict)
+        #print("////////////format_dict")
+        #print(format_dict)
 
         # Check if current node is a list
         if isinstance(subtree, list):
@@ -120,17 +120,29 @@ class Nfo:
                 sub_index = sub_name.find('>')
 
             #!
-            #if isinstance(value, list):   
-            print("////////////////add tree")
-            print(value)
-                #print(len(value))
-            child = ET.SubElement(sub_parent, sub_name)
-            child.text = value
+            if value[0] == '[':
+                value = ast.literal_eval(value)
+                if isinstance(value, list):   
+                    print("////////////////add tree")
+                    print(value)
+                for v in value:
+                    child = ET.SubElement(sub_parent, sub_name)
+                    child.text = v
 
-            # Add attributes
-            if 'attr' in attributes.keys():
-                for attribute, attr_value in attributes['attr'].items():
-                    child.set(attribute, attr_value.format_map(format_dict))
+                    # Add attributes
+                    if 'attr' in attributes.keys():
+                        for attribute, attr_value in attributes['attr'].items():
+                            child.set(attribute, attr_value.format_map(format_dict))                    
+            
+            
+            else:
+                child = ET.SubElement(sub_parent, sub_name)
+                child.text = value
+
+                # Add attributes
+                if 'attr' in attributes.keys():
+                    for attribute, attr_value in attributes['attr'].items():
+                        child.set(attribute, attr_value.format_map(format_dict))
 
     def print_nfo(self):
         xmlstr = minidom.parseString(ET.tostring(
