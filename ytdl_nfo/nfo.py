@@ -33,7 +33,7 @@ class Nfo:
         try:
             self.__create_child(self.top, self.data[top_name], raw_data)
             #!
-            print("data[top_name]")
+            print("\\\\\\\\\\\\\\\\\\\data[top_name]")
             print(self.data[top_name])
             print(self.data)
         except ValueError as e:
@@ -53,11 +53,14 @@ class Nfo:
         # https://stackoverflow.com/a/21754294
         format_dict = defaultdict(lambda: "")
         format_dict.update(raw_data)
+        #!
+        print("////////////format_dict")
+        print(format_dict)
 
         # Check if current node is a list
         if isinstance(subtree, list):
             #!
-            print("IS LIST")
+            print("///////////////////IS LIST")
             print(subtree)
 
             # Process individual nodes
@@ -116,6 +119,11 @@ class Nfo:
                 sub_name = sub_name[sub_index + 1:]
                 sub_index = sub_name.find('>')
 
+            #!
+            #if isinstance(value, list):   
+            print("////////////////add tree")
+            print(value)
+                #print(len(value))
             child = ET.SubElement(sub_parent, sub_name)
             child.text = value
 
@@ -130,6 +138,9 @@ class Nfo:
         print(xmlstr)
 
     def write_nfo(self, filename):
+        #!
+        print("/////////////////write_nfo")
+        print(self.top)
         xmlstr = minidom.parseString(ET.tostring(
             self.top, 'utf-8')).toprettyxml(indent="    ")
         with open(filename, 'wt', encoding="utf-8") as f:
