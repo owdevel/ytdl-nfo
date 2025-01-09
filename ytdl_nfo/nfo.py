@@ -9,8 +9,8 @@ from xml.dom import minidom
 
 class Nfo:
     def __init__(self, extractor, file_path):
-        self.data = None
-        self.top = None
+        self.data = None    #initiate from yaml file.
+        self.top = None     #top level node
         try:
             extractor_path = f"configs/{extractor}.yaml"
             with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
@@ -29,20 +29,6 @@ class Nfo:
         top_name = list(self.data.keys())[0]
         self.top = ET.Element(top_name)
 
-        # Recursively generate the rest of the NFO
-        try:
-            self.__create_child(self.top, self.data[top_name], raw_data)
-            #!
-            print("\\\\\\\\\\\\\\\\\\\data[top_name]")
-            print(self.data[top_name])
-            print(self.data)
-        except ValueError as e:
-            print(e)
-            return False
-
-        return True
-
-    def __create_child(self, parent, subtree, raw_data):
         # Some .info.json files may not include an upload_date.
         if raw_data.get("upload_date") is None:
             date = dt.datetime.fromtimestamp(raw_data["epoch"])
@@ -53,19 +39,30 @@ class Nfo:
         # https://stackoverflow.com/a/21754294
         format_dict = defaultdict(lambda: "")
         format_dict.update(raw_data)
-        #!
-        #print("////////////format_dict")
-        #print(format_dict)
 
+        # Recursively generate the rest of the NFO
+        try:
+            self.__create_child(self.top, self.data[top_name], format_dict)
+            #!
+            #print("\\\\\\\\\\\\\\\\\\\data[top_name]")
+            #print(self.data[top_name])
+            #print(self.data)
+        except ValueError as e:
+            print(e)
+            return False
+
+        return True
+
+    def __create_child(self, parent, subtree, format_dict):
         # Check if current node is a list
         if isinstance(subtree, list):
             #!
-            print("///////////////////IS LIST")
+            print("///////////////////IS LIST///subtree")
             print(subtree)
 
             # Process individual nodes
             for child in subtree:
-                self.__create_child(parent, child, raw_data)
+                self.__create_child(parent, child, format_dict)
             return
 
         # Process data in child node
@@ -100,14 +97,18 @@ class Nfo:
         # Value only
         else:
             if table:
-                children = ast.literal_eval(
-                    subtree[child_name].format_map(format_dict))
+                children = ast.literal_eval(subtree[child_name].format_map(format_dict))
             else:
-                children = [subtree[child_name].format_map(format_dict)]
-
+                children = subtree[child_name].format_map(format_dict)
+                #!
+                #children = ast.literal_eval(subtree[child_name].format_map(format_dict))
+                print('////////////////////subtree[child_name].format_map(format_dict)')
+                print(subtree[child_name],isinstance(subtree[child_name].format_map(format_dict),str),subtree[child_name].format_map(format_dict))
         # Add the child node(s)
         child_name = child_name.rstrip('!')
-
+        #!
+        #print('////////////////////////children')
+        #print(children)
         for value in children:
             sub_parent = parent
             sub_name = child_name
@@ -120,7 +121,7 @@ class Nfo:
                 sub_index = sub_name.find('>')
 
             #!
-            if value[0] == '[':
+            if value[0] == '[[]':
                 value = ast.literal_eval(value)
                 if isinstance(value, list):   
                     print("////////////////add tree")
