@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import pkg_resources
 from collections import defaultdict
 from xml.dom import minidom
-
+import string
 
 class Nfo:
     def __init__(self, extractor, file_path):
@@ -43,10 +43,6 @@ class Nfo:
         # Recursively generate the rest of the NFO
         try:
             self.__create_child(self.top, self.data[top_name], format_dict)
-            #!
-            #print("\\\\\\\\\\\\\\\\\\\data[top_name]")
-            #print(self.data[top_name])
-            #print(self.data)
         except ValueError as e:
             print(e)
             return False
@@ -67,11 +63,12 @@ class Nfo:
 
         # Process data in child node
         child_name = list(subtree.keys())[0]
-
         table = child_name[-1] == '!'
 
         attributes = {}
         children = []
+
+        formatter = string.Formatter()
 
         # Check if attributes are present
         if isinstance(subtree[child_name], dict):
@@ -96,54 +93,57 @@ class Nfo:
 
         # Value only
         else:
-            if table:
-                children = ast.literal_eval(subtree[child_name].format_map(format_dict))
-            else:
-                children = subtree[child_name].format_map(format_dict)
-                #!
-                #children = ast.literal_eval(subtree[child_name].format_map(format_dict))
-                print('////////////////////subtree[child_name].format_map(format_dict)')
-                print(subtree[child_name],isinstance(subtree[child_name].format_map(format_dict),str),subtree[child_name].format_map(format_dict))
+            for literal_text, field_name, format_spec, conversion in formatter.parse(subtree[child_name]):
+                print(literal_text, field_name, format_spec, conversion)
+                # if there's a field, use it as a key
+                if field_name is not None:
+
+                    # When empty field_names are given.
+                    if field_name == '':
+                        raise ValueError('')
+
+                    elif field_name.isdigit():
+                        raise ValueError('')
+
+                    else:
+                        children = format_dict[field_name]
+                        print('////////////////////new child')
+                        print(type(children),children)
+            #!if table:
+            #!    children = ast.literal_eval(subtree[child_name].format_map(format_dict))
+            #!else:
+            #!    children = subtree[child_name].format_map(format_dict)
         # Add the child node(s)
         child_name = child_name.rstrip('!')
-        #!
-        #print('////////////////////////children')
-        #print(children)
-        for value in children:
-            sub_parent = parent
-            sub_name = child_name
+        #!for value in children:
+        sub_parent = parent
+        sub_name = child_name
+        sub_index = sub_name.find('>')
+        while sub_index > -1:
+            if not table:
+                raise ValueError(f'Error with key {sub_name}: > deliminator can only be used for lists')
+            sub_parent = ET.SubElement(sub_parent, sub_name[:sub_index])
+            sub_name = sub_name[sub_index + 1:]
             sub_index = sub_name.find('>')
-            while sub_index > -1:
-                if not table:
-                    raise ValueError(f'Error with key {sub_name}: > deliminator can only be used for lists')
-                sub_parent = ET.SubElement(sub_parent, sub_name[:sub_index])
-                sub_name = sub_name[sub_index + 1:]
-                sub_index = sub_name.find('>')
-
-            #!
-            if value[0] == '[[]':
-                value = ast.literal_eval(value)
-                if isinstance(value, list):   
-                    print("////////////////add tree")
-                    print(value)
-                for v in value:
-                    child = ET.SubElement(sub_parent, sub_name)
-                    child.text = v
-
-                    # Add attributes
-                    if 'attr' in attributes.keys():
-                        for attribute, attr_value in attributes['attr'].items():
-                            child.set(attribute, attr_value.format_map(format_dict))                    
-            
-            
-            else:
+        #!
+        if isinstance(children, list):   
+            print("////////////////add tree")
+            print(children)
+            for c in children:
                 child = ET.SubElement(sub_parent, sub_name)
-                child.text = value
-
+                child.text = c
                 # Add attributes
                 if 'attr' in attributes.keys():
                     for attribute, attr_value in attributes['attr'].items():
-                        child.set(attribute, attr_value.format_map(format_dict))
+                        child.set(attribute, attr_value.format_map(format_dict))                    
+        
+        else:
+            child = ET.SubElement(sub_parent, sub_name)
+            child.text = children
+            # Add attributes
+            if 'attr' in attributes.keys():
+                for attribute, attr_value in attributes['attr'].items():
+                    child.set(attribute, attr_value.format_map(format_dict))
 
     def print_nfo(self):
         xmlstr = minidom.parseString(ET.tostring(
