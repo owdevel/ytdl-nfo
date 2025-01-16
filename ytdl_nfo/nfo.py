@@ -73,23 +73,41 @@ class Nfo:
         # Check if attributes are present
         if isinstance(subtree[child_name], dict):
             attributes = subtree[child_name]
-            value = subtree[child_name]['value']
+            #!value = subtree[child_name]['value']
 
-            # Set children if value flag
-            if table:
-                children = ast.literal_eval(value.format_map(format_dict))
-            else:
-                children = [value.format_map(format_dict)]
+            #!# Set children if value flag
+            #!if table:
+            #!    #!
+            #!    pass
+            #!    #!children = ast.literal_eval(value.format_map(format_dict))
+            #!else:
+            #!    children = [value.format_map(format_dict)]
+            #!
+            for literal_text, field_name, format_spec, conversion in formatter.parse(subtree[child_name]['value']):
+                print(literal_text, field_name, format_spec, conversion)
+                # if there's a field, use it as a key
+                if field_name is not None:
 
+                    # When empty field_names are given.
+                    if field_name == '':
+                        raise ValueError('')
+
+                    elif field_name.isdigit():
+                        raise ValueError('')
+
+                    else:
+                        children = format_dict[field_name]
+                        print('////////////////////new child')
+                        print(type(children),children)
             if 'convert' in attributes.keys():
                 target_type = attributes['convert']
                 input_f = attributes['input_f']
                 output_f = attributes['output_f']
 
-                for i in range(len(children)):
-                    if target_type == 'date':
-                        date = dt.datetime.strptime(children[i], input_f)
-                        children[i] = date.strftime(output_f)
+                #!for i in range(len(children)):
+                #!    if target_type == 'date':
+                #!        date = dt.datetime.strptime(children[i], input_f)
+                #!        children[i] = date.strftime(output_f)
 
         # Value only
         else:
