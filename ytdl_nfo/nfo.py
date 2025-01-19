@@ -68,8 +68,6 @@ class Nfo:
         attributes = {}
         children = []
 
-        formatter = string.Formatter()
-
         # Check if attributes are present
         if isinstance(subtree[child_name], dict):
             attributes = subtree[child_name]
@@ -83,22 +81,8 @@ class Nfo:
             #!else:
             #!    children = [value.format_map(format_dict)]
             #!
-            for literal_text, field_name, format_spec, conversion in formatter.parse(subtree[child_name]['value']):
-                print(literal_text, field_name, format_spec, conversion)
-                # if there's a field, use it as a key
-                if field_name is not None:
-
-                    # When empty field_names are given.
-                    if field_name == '':
-                        raise ValueError('')
-
-                    elif field_name.isdigit():
-                        raise ValueError('')
-
-                    else:
-                        children = format_dict[field_name]
-                        print('////////////////////new child')
-                        print(type(children),children)
+            children = self.interpret_child(format_dict,subtree[child_name]['value'])
+ 
             if 'convert' in attributes.keys():
                 target_type = attributes['convert']
                 input_f = attributes['input_f']
@@ -108,25 +92,14 @@ class Nfo:
                 #!    if target_type == 'date':
                 #!        date = dt.datetime.strptime(children[i], input_f)
                 #!        children[i] = date.strftime(output_f)
-
+                #!
+                if target_type == 'date':
+                    date = dt.datetime.strptime(children, input_f)
+                    children = date.strftime(output_f)
         # Value only
         else:
-            for literal_text, field_name, format_spec, conversion in formatter.parse(subtree[child_name]):
-                print(literal_text, field_name, format_spec, conversion)
-                # if there's a field, use it as a key
-                if field_name is not None:
-
-                    # When empty field_names are given.
-                    if field_name == '':
-                        raise ValueError('')
-
-                    elif field_name.isdigit():
-                        raise ValueError('')
-
-                    else:
-                        children = format_dict[field_name]
-                        print('////////////////////new child')
-                        print(type(children),children)
+            children = self.interpret_child(format_dict, subtree[child_name])
+                
             #!if table:
             #!    children = ast.literal_eval(subtree[child_name].format_map(format_dict))
             #!else:
@@ -145,23 +118,42 @@ class Nfo:
             sub_index = sub_name.find('>')
         #!
         if isinstance(children, list):   
-            print("////////////////add tree")
+            print("////////////////child is list")
             print(children)
             for c in children:
-                child = ET.SubElement(sub_parent, sub_name)
-                child.text = c
-                # Add attributes
-                if 'attr' in attributes.keys():
-                    for attribute, attr_value in attributes['attr'].items():
-                        child.set(attribute, attr_value.format_map(format_dict))                    
+                self.creat_ET_node(sub_parent, sub_name, attributes, format_dict, c)              
         
         else:
-            child = ET.SubElement(sub_parent, sub_name)
-            child.text = children
-            # Add attributes
-            if 'attr' in attributes.keys():
-                for attribute, attr_value in attributes['attr'].items():
-                    child.set(attribute, attr_value.format_map(format_dict))
+            self.creat_ET_node(sub_parent, sub_name, attributes, format_dict, children)
+    
+    def interpret_child(self, format_dict, value):
+        children=[]
+        formatter = string.Formatter()
+        for literal_text, field_name, format_spec, conversion in formatter.parse(value):
+                print(literal_text, field_name, format_spec, conversion)
+                # if there's a field, use it as a key
+                if field_name is not None:
+
+                    # When empty field_names are given.
+                    if field_name == '':
+                        raise ValueError('')
+
+                    elif field_name.isdigit():
+                        raise ValueError('')
+
+                    else:
+                        children = format_dict[field_name]
+                        print('////////////////////new child')
+                        print('field_name:', field_name, type(children),children)
+        return children
+    
+    def creat_ET_node(self, sub_parent, sub_name, attributes, format_dict, text):
+        child = ET.SubElement(sub_parent, sub_name)
+        child.text = text
+        # Add attributes
+        if 'attr' in attributes.keys():
+            for attribute, attr_value in attributes['attr'].items():
+                child.set(attribute, attr_value.format_map(format_dict))
 
     def print_nfo(self):
         xmlstr = minidom.parseString(ET.tostring(
