@@ -106,16 +106,12 @@ class Nfo:
             #!    children = subtree[child_name].format_map(format_dict)
         # Add the child node(s)
         child_name = child_name.rstrip('!')
-        #!for value in children:
         sub_parent = parent
-        sub_name = child_name
-        sub_index = sub_name.find('>')
-        while sub_index > -1:
-            if not table:
-                raise ValueError(f'Error with key {sub_name}: > deliminator can only be used for lists')
-            sub_parent = ET.SubElement(sub_parent, sub_name[:sub_index])
-            sub_name = sub_name[sub_index + 1:]
-            sub_index = sub_name.find('>')
+        child_name_list = child_name.split('>') 
+        sub_name = child_name_list[-1]
+        for cnl in child_name_list[:-1]:
+            sub_parent = ET.SubElement(sub_parent, cnl)
+        
         #!
         if isinstance(children, list):   
             print("////////////////child is list")
