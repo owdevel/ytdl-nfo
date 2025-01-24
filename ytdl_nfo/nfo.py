@@ -52,9 +52,6 @@ class Nfo:
     def __create_child(self, parent, subtree, format_dict):
         # Check if current node is a list
         if isinstance(subtree, list):
-            #!
-            print("///////////////////IS LIST///subtree")
-            print(subtree)
 
             # Process individual nodes
             for child in subtree:
@@ -71,16 +68,6 @@ class Nfo:
         # Check if attributes are present
         if isinstance(subtree[child_name], dict):
             attributes = subtree[child_name]
-            #!value = subtree[child_name]['value']
-
-            #!# Set children if value flag
-            #!if table:
-            #!    #!
-            #!    pass
-            #!    #!children = ast.literal_eval(value.format_map(format_dict))
-            #!else:
-            #!    children = [value.format_map(format_dict)]
-            #!
             children = self.interpret_child(format_dict,subtree[child_name]['value'])
  
             if 'convert' in attributes.keys():
@@ -88,22 +75,13 @@ class Nfo:
                 input_f = attributes['input_f']
                 output_f = attributes['output_f']
 
-                #!for i in range(len(children)):
-                #!    if target_type == 'date':
-                #!        date = dt.datetime.strptime(children[i], input_f)
-                #!        children[i] = date.strftime(output_f)
-                #!
                 if target_type == 'date':
                     date = dt.datetime.strptime(children, input_f)
                     children = date.strftime(output_f)
         # Value only
         else:
             children = self.interpret_child(format_dict, subtree[child_name])
-                
-            #!if table:
-            #!    children = ast.literal_eval(subtree[child_name].format_map(format_dict))
-            #!else:
-            #!    children = subtree[child_name].format_map(format_dict)
+        
         # Add the child node(s)
         child_name = child_name.rstrip('!')
         sub_parent = parent
@@ -112,13 +90,10 @@ class Nfo:
         for cnl in child_name_list[:-1]:
             sub_parent = ET.SubElement(sub_parent, cnl)
         
-        #!
-        if isinstance(children, list):   
-            print("////////////////child is list")
-            print(children)
+        # If type of 'value' is list, repeat to create SubElement
+        if isinstance(children, list):
             for c in children:
-                self.creat_ET_node(sub_parent, sub_name, attributes, format_dict, c)              
-        
+                self.creat_ET_node(sub_parent, sub_name, attributes, format_dict, c)
         else:
             self.creat_ET_node(sub_parent, sub_name, attributes, format_dict, children)
     
