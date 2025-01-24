@@ -101,7 +101,6 @@ class Nfo:
         children=[]
         formatter = string.Formatter()
         for literal_text, field_name, format_spec, conversion in formatter.parse(value):
-                print(literal_text, field_name, format_spec, conversion)
                 # if there's a field, use it as a key
                 if field_name is not None:
 
@@ -114,8 +113,6 @@ class Nfo:
 
                     else:
                         children = format_dict[field_name]
-                        print('////////////////////new child')
-                        print('field_name:', field_name, type(children),children)
         return children
     
     def creat_ET_node(self, sub_parent, sub_name, attributes, format_dict, text):
@@ -132,9 +129,6 @@ class Nfo:
         print(xmlstr)
 
     def write_nfo(self, filename):
-        #!
-        print("/////////////////write_nfo")
-        print(self.top)
         xmlstr = minidom.parseString(ET.tostring(
             self.top, 'utf-8')).toprettyxml(indent="    ")
         with open(filename, 'wt', encoding="utf-8") as f:
