@@ -8,9 +8,12 @@ from xml.dom import minidom
 import string
 
 class Nfo:
+    """
+    Class to generate and manage NFO (XML) files from raw data using YAML configurations.
+    """
     def __init__(self, extractor, file_path):
-        self.data = None    #initiate from yaml file.
-        self.top = None     #top level node
+        self.data = None  # Loaded from YAML configuration file.
+        self.top = None  # Root XML element.
         try:
             extractor_path = f"configs/{extractor}.yaml"
             with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
@@ -19,12 +22,17 @@ class Nfo:
             print(f"Error: No config available for extractor {extractor} in file {file_path}")
     
     def config_ok(self):
+        """Check if the configuration is successfully loaded."""
         return self.data is not None
     
     def generated_ok(self):
+        """Check if the NFO XML has been generated."""
         return self.top is not None
     
     def generate(self, raw_data):
+        """
+        Generate the NFO (XML) structure from raw data.
+        """
         # There should only be one top level node
         top_name = list(self.data.keys())[0]
         self.top = ET.Element(top_name)
@@ -124,21 +132,33 @@ class Nfo:
                 child.set(attribute, attr_value.format_map(format_dict))
 
     def print_nfo(self):
+        """
+        Print the NFO XML to the console.
+        """
         xmlstr = minidom.parseString(ET.tostring(
             self.top, 'utf-8')).toprettyxml(indent="    ")
         print(xmlstr)
 
     def write_nfo(self, filename):
+        """
+        Write the NFO XML to a file.
+        """
         xmlstr = minidom.parseString(ET.tostring(
             self.top, 'utf-8')).toprettyxml(indent="    ")
         with open(filename, 'wt', encoding="utf-8") as f:
             f.write(xmlstr)
 
     def get_nfo(self):
+        """
+        Return the NFO XML as a pretty-printed string.
+        """
         xmlstr = minidom.parseString(ET.tostring(
             self.top, 'utf-8')).toprettyxml(indent="    ")
         return xmlstr
 
 
 def get_config(extractor, file_path):
+    """
+    Factory function to initialize Nfo object.
+    """
     return Nfo(extractor, file_path)
