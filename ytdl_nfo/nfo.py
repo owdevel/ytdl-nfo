@@ -33,62 +33,55 @@ class Nfo:
         """
         Generate the NFO (XML) structure from raw data.
         """
-        # There should only be one top level node
-        top_name = list(self.data.keys())[0]
-        self.top = ET.Element(top_name)
-
-        # Some .info.json files may not include an upload_date.
-        if raw_data.get("upload_date") is None:
-            date = dt.datetime.fromtimestamp(raw_data["epoch"])
-            raw_data["upload_date"] = date.strftime("%Y%m%d")
-        
-        # Allow missing keys to give an empty string instead of
-        # a KeyError when formatting values
-        # https://stackoverflow.com/a/21754294
-        format_dict = defaultdict(lambda: "")
-        format_dict.update(raw_data)
-
         # Recursively generate the rest of the NFO
         try:
+            # There should only be one top level node
+            top_name = list(self.data.keys())[0]
+            self.top = ET.Element(top_name)
+            # Some .info.json files may not include an upload_date.
+            if "upload_date" not in raw_data:
+                date = dt.datetime.fromtimestamp(raw_data["epoch"])
+                raw_data["upload_date"] = date.strftime("%Y%m%d")
+
+            # Allow missing keys to give an empty string instead of
+            # a KeyError when formatting values
+            # https://stackoverflow.com/a/21754294
+            format_dict = defaultdict(lambda: "")
+            format_dict.update(raw_data)
             self.__create_child(self.top, self.data[top_name], format_dict)
-        except ValueError as e:
-            print(e)
+            return True
+        except Exception as e:
+            print(f"Error during generation: {e}")
             return False
 
         return True
 
     def __create_child(self, parent, subtree, format_dict):
+        """
+        Recursively create child XML nodes.
+        """
         # Check if current node is a list
         if isinstance(subtree, list):
-
             # Process individual nodes
             for child in subtree:
                 self.__create_child(parent, child, format_dict)
             return
 
         # Process data in child node
-        child_name = list(subtree.keys())[0]
-        table = child_name[-1] == '!'
-
+        child_name, child_data = next(iter(subtree.items()))
         attributes = {}
         children = []
 
         # Check if attributes are present
-        if isinstance(subtree[child_name], dict):
-            attributes = subtree[child_name]
-            children = self.interpret_child(format_dict,subtree[child_name]['value'])
- 
-            if 'convert' in attributes.keys():
-                target_type = attributes['convert']
-                input_f = attributes['input_f']
-                output_f = attributes['output_f']
+        if isinstance(child_data, dict):
+            attributes = child_data
+            children = self.__interpret_value(format_dict, child_data.get("value", ""))
 
-                if target_type == 'date':
-                    date = dt.datetime.strptime(children, input_f)
-                    children = date.strftime(output_f)
+            if "convert" in attributes:
+                children = self.__apply_conversion(children, attributes)
         # Value only
         else:
-            children = self.interpret_child(format_dict, subtree[child_name])
+            children = self.__interpret_value(format_dict, child_data)
         
         # Add the child node(s)
         child_name = child_name.rstrip('!')
@@ -98,38 +91,69 @@ class Nfo:
         for cnl in child_name_list[:-1]:
             sub_parent = ET.SubElement(sub_parent, cnl)
         
-        # If type of 'value' is list, repeat to create SubElement
-        if isinstance(children, list):
-            for c in children:
-                self.creat_ET_node(sub_parent, sub_name, attributes, format_dict, c)
-        else:
-            self.creat_ET_node(sub_parent, sub_name, attributes, format_dict, children)
+        self.__add_child_nodes(parent, child_name.rstrip("!"), attributes, children, format_dict)
     
-    def interpret_child(self, format_dict, value):
-        children=[]
+    def __interpret_value(self, format_dict, value):
+        """
+        Interpret and format values based on format_dict.
+        """
         formatter = string.Formatter()
         for literal_text, field_name, format_spec, conversion in formatter.parse(value):
                 # if there's a field, use it as a key
                 if field_name is not None:
 
-                    # When empty field_names are given.
+                    # When empty field_name was given.
                     if field_name == '':
-                        raise ValueError('')
+                        raise ValueError('Empty field_name was given')
 
-                    elif field_name.isdigit():
-                        raise ValueError('')
+                    #elif field_name.isdigit():
+                    #    raise ValueError('')
 
                     else:
-                        children = format_dict[field_name]
-        return children
+                        return format_dict[field_name]
+        return ""
     
-    def creat_ET_node(self, sub_parent, sub_name, attributes, format_dict, text):
-        child = ET.SubElement(sub_parent, sub_name)
-        child.text = text
+    def __apply_conversion(self, value, attributes):
+        """
+        Apply type conversion if specified in attributes.
+        """
+        target_type = attributes.get("convert")
+        input_format = attributes.get("input_f")
+        output_format = attributes.get("output_f")
+
+        if target_type == "date":
+            date = dt.datetime.strptime(value, input_format)
+            return date.strftime(output_format)
+
+        return value
+
+    def __add_child_nodes(self, parent, child_name, attributes, children, format_dict):
+        """
+        Add XML child nodes to the parent.
+        """
+        sub_parent = parent
+        for part in child_name.split(">")[:-1]:
+            sub_parent = ET.SubElement(sub_parent, part)
+
+        final_name = child_name.split(">")[-1]
+
+        # If type of 'children' is list, repeat to create SubElement
+        if isinstance(children, list):
+            for child in children:
+                self.__create_element(sub_parent, final_name, attributes, child, format_dict)
+        else:
+            self.__create_element(sub_parent, final_name, attributes, children, format_dict)
+    
+    def __create_element(self, parent, name, attributes, text, format_dict):
+        """
+        Create and append an XML element.
+        """
+        element = ET.SubElement(parent, name)
+        element.text = text
+
         # Add attributes
-        if 'attr' in attributes.keys():
-            for attribute, attr_value in attributes['attr'].items():
-                child.set(attribute, attr_value.format_map(format_dict))
+        for attr, attr_value in attributes.get("attr", {}).items():
+            element.set(attr, attr_value.format_map(format_dict))
 
     def print_nfo(self):
         """
