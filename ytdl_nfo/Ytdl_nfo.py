@@ -3,7 +3,6 @@ import os
 import re
 from .nfo import get_config
 
-
 class Ytdl_nfo:
     def __init__(self, file_path, extractor=None):
         self.path = file_path
