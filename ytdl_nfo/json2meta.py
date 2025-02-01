@@ -1,4 +1,25 @@
 import json
+
+def get_info_json_files(directories):
+    """
+    Given a list of directories, returns a list of file paths ending with 'info.json'.
+    
+    :param directories: List of directory paths to search in.
+    :return: List of file paths ending with 'info.json'.
+    """
+    json_files = []
+    
+    for directory in directories:
+        if not os.path.isdir(directory):
+            continue  # Skip invalid directories
+
+        for root, _, files in os.walk(directory):
+            for file in files:
+                if file.endswith("info.json"):
+                    json_files.append(os.path.join(root, file))
+
+    return json_files
+
 #ffmpeg -i INPUT.mp4 -f ffmetadata FFMETADATAFILE
 with open("c.json", "rt", encoding="utf-8") as f:
    data = json.load(f)
