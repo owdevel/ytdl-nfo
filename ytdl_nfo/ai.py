@@ -5,6 +5,20 @@ import subprocess
 import tempfile
 import argparse
 
+"""
+Take Away
+    subprocess vs os.system
+    1.Always Use List Arguments: When using subprocess, prefer passing commands as a list of arguments.
+    2.Avoid shell=True: If you must use a string command, avoid using shell=True unless absolutely necessary, and ensure that any user input is properly sanitized.
+    3.Validate User Input: Always validate and sanitize user input to ensure it does not contain malicious content.
+
+    path handling
+    Use os.path.join() for constructing file paths to ensure compatibility across different operating systems. 
+
+    Temporary Directory Management
+    Instead of creating a temporary directory and then removing it, consider using Python's tempfile module to create a temporary directory that will be automatically cleaned up. 
+"""
+
 def get_info_json_files(directories):
     """
     Given a list of directories, returns a list of file paths ending with 'info.json'.
