@@ -32,7 +32,10 @@ def get_info_json_files(directories):
             print(f"Skipping invalid directory: {directory}")
             continue  # Skip invalid directories
         for root, _, files in os.walk(directory):
-            json_files.extend(os.path.join(root, file) for file in files if file.endswith("info.json"))
+            for file in files:
+                if file.endswith("info.json"):
+                    json_files.append(os.path.join(root, file))
+    
     return json_files
 
 def create_metadata_file(json_file, media_file):
@@ -87,7 +90,7 @@ def main(directories):
             metadata_file = create_metadata_file(json_file, media_file)
             if metadata_file:
                 add_metadata_to_media_file(media_file, metadata_file)
-                os.remove(metadata_file)
+                os.remove(metadata_file) #When delete=False, ensure to clean up temporary files to avoid cluttering your filesystem, especially if your application creates many temporary files.
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process JSON files to add metadata to media files.")
