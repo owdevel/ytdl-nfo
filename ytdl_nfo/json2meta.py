@@ -1,6 +1,9 @@
 import json
 import os
 import shutil
+import subprocess
+import tempfile
+import argparse
 
 def get_info_json_files(directories):
     """
@@ -10,50 +13,73 @@ def get_info_json_files(directories):
     :return: List of file paths ending with 'info.json'.
     """
     json_files = []
-
     for directory in directories:
         if not os.path.isdir(directory):
+            print(f"Skipping invalid directory: {directory}")
             continue  # Skip invalid directories
-
         for root, _, files in os.walk(directory):
-            for file in files:
-                if file.endswith("info.json"):
-                    json_files.append(os.path.join(root, file))
-
-
+            json_files.extend(os.path.join(root, file) for file in files if file.endswith("info.json"))
     return json_files
 
-json_files = get_info_json_files(["G:\\Videos\\test\\"])
-
-for json_file in json_files:
+def create_metadata_file(json_file, media_file):
+    """
+    Creates a metadata file for the given media file.
+    
+    :param json_file: Path to the JSON file.
+    :param media_file: Path to the media file.
+    :return: Path to the metadata file.
+    """
     with open(json_file, "rt", encoding="utf-8") as f:
         data = json.load(f)
-        if "ext" in data:
-            media = json_file[:-9]+data["ext"]
-            os.system(f"ffmpeg -y -i \"{media}\" -f ffmetadata FFMETADATAFILE")
-            if "chapters" in data:
-
-                text = ""
-                for d in data["chapters"]:
-                    text += f"""
+    if "chapters" in data:
+        #Instead of creating a temporary file manually, we use tempfile.NamedTemporaryFile to create a temporary file with a unique name.
+        metadata_file = tempfile.NamedTemporaryFile(mode="a", delete=False)
+        subprocess.run(["ffmpeg","-y","-i",media_file,"-f","ffmetadata",metadata_file.name], check=True)
+        with open(metadata_file.name, "a", encoding="utf-8") as metadata_file:
+            CH = ""
+            for chapter in data["chapters"]:
+                CH += f"""
 [CHAPTER]
 TIMEBASE=1/1000
-START={int(d["start_time"]*1000)}
-END={int(d["end_time"]*1000)}
-title={d["title"]}
-"""             
-                index = media.rfind('\\')
+START={int(chapter["start_time"] * 1000)}
+END={int(chapter["end_time"] * 1000)}
+title={chapter["title"]}
+"""
+            metadata_file.write(CH)
+            metadata_file.close()
+            return metadata_file.name
+    return None
+
+def add_metadata_to_media_file(media_file, metadata_file):
+    """
+    Adds metadata to the given media file.
     
-                # If the character is found, slice the string up to that index
-                if index != -1:
-                    dir = media[:index]+"\\ffmpeg"
-                    try:
-                        os.mkdir(dir)
-                    except FileExistsError:
-                        pass
-                    output_media = dir+media[index:]
-                    with open("FFMETADATAFILE", "a",encoding="utf-8") as myfile:
-                        myfile.write(text)
-                    os.system(f"ffmpeg -i \"{media}\" -i FFMETADATAFILE -map_metadata 1 -codec copy \"{output_media}\"")
-                    os.replace(output_media,media)
-                    os.rmdir(dir) #shutil.rmtree(dir)
+    :param media_file: Path to the media file.
+    :param metadata_file: Path to the metadata file.
+    """
+    try:
+        output_media = os.path.join(os.path.dirname(media_file), "ffmpeg", os.path.basename(media_file))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_media = os.path.join(temp_dir, os.path.basename(media_file))
+            subprocess.run(["ffmpeg","-i",media_file,"-i",metadata_file,"-map_metadata","1","-codec","copy",output_media], check=True)
+            shutil.move(output_media, media_file)
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while processing {media_file}: {e}")
+
+def main(directories):
+    json_files = get_info_json_files(directories)
+    for json_file in json_files:
+        with open(json_file, "rt", encoding="utf-8") as f:
+            data = json.load(f)
+        if "ext" in data:
+            media_file = json_file[:-9] + data["ext"]
+            metadata_file = create_metadata_file(json_file, media_file)
+            if metadata_file:
+                add_metadata_to_media_file(media_file, metadata_file)
+                os.remove(metadata_file)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process JSON files to add metadata to media files.")
+    parser.add_argument('directories', nargs='+', help='List of directories to search for info.json files')
+    args = parser.parse_args()
+    main(args.directories)
