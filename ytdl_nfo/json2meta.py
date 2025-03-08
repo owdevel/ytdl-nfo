@@ -32,9 +32,9 @@ def create_metadata_file(json_file, media_file):
     with open(json_file, "rt", encoding="utf-8") as f:
         data = json.load(f)
     if "chapters" in data:
-        #Instead of creating a temporary file manually, we use tempfile.NamedTemporaryFile to create a temporary file with a unique name.
-        metadata_file = tempfile.NamedTemporaryFile(mode="a", delete=False)
-        subprocess.run(["ffmpeg","-y","-i",media_file,"-f","ffmetadata",metadata_file.name], check=True)
+        # Instead of creating a temporary file manually, we use tempfile.NamedTemporaryFile to create a temporary file with a unique name.
+        with tempfile.NamedTemporaryFile(mode="a", delete=False) as metadata_file:
+            subprocess.run(["ffmpeg", "-y", "-i", media_file, "-f", "ffmetadata", metadata_file.name], check=True)
         with open(metadata_file.name, "a", encoding="utf-8") as metadata_file:
             CH = ""
             for chapter in data["chapters"]:
@@ -46,8 +46,7 @@ END={int(chapter["end_time"] * 1000)}
 title={chapter["title"]}
 """
             metadata_file.write(CH)
-            metadata_file.close()
-            return metadata_file.name
+        return metadata_file.name
     return None
 
 def add_metadata_to_media_file(media_file, metadata_file):
@@ -61,7 +60,7 @@ def add_metadata_to_media_file(media_file, metadata_file):
         output_media = os.path.join(os.path.dirname(media_file), "ffmpeg", os.path.basename(media_file))
         with tempfile.TemporaryDirectory() as temp_dir:
             output_media = os.path.join(temp_dir, os.path.basename(media_file))
-            subprocess.run(["ffmpeg","-i",media_file,"-i",metadata_file,"-map_metadata","1","-codec","copy",output_media], check=True)
+            subprocess.run(["ffmpeg", "-i", media_file, "-i", metadata_file, "-map_metadata", "1", "-codec", "copy", output_media], check=True)
             shutil.move(output_media, media_file)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while processing {media_file}: {e}")
