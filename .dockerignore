@@ -1,0 +1,16 @@
+# Common
+.env
+.vscode
+
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+docker-compose*.yml
+Dockerfile*
+
+# Nix
+flake.lock
+flake.nix
