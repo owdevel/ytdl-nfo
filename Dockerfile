@@ -1,5 +1,6 @@
 FROM python:3.13-slim-bookworm
 
+# Poetry version
 ENV POETRY_VERSION=2.1.1
 
 RUN pip install --no-cache-dir poetry==${POETRY_VERSION}

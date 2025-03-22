@@ -74,8 +74,11 @@ ytdl-nfo video_folder
 # Create a single NFO file using metadata from `great_video.info.json` and the `custom_extractor_name` template
 ytdl-nfo --extractor custom_extractor_name great_video.info.json
 
-# If using Docker, the ENTRYPOINT is already running `python3 -m ytdl_nfo`, so you just need to pass a volume and your arguments
-docker run -it --rm -v .:/app ytdl-nfo:latest --help
+# If using Docker, the ENTRYPOINT is already running `python3 -m ytdl_nfo`, so you just need to pass your arguments
+docker run -it --rm ytdl-nfo:latest --help
+
+# If using Docker, you need to pass in a volume that contains the JSON file, then specify the path to that JSON file inside the container
+docker run -it --rm --volume ~/Downloads:/my-volume ytdl-nfo:latest --extractor youtube /my-volume/sample.json
 ```
 
 ## Contributing
