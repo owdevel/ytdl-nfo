@@ -33,6 +33,10 @@ While this package was originally built for youtube-dl, the goal is to maintain 
 5. Build with `poetry build`
 6. Install from the `dist` directory with `pip install ./dist/ytdl_nfo-x.x.x.tar.gz`
 
+### Docker
+
+1. Build the image `docker build -t ytdl-nfo:latest .`
+
 ## Usage
 
 youtube-dl uses site-specific extractors to collect technical data about a media file. This metadata, along with the extractor ID, are written to a `.info.json` file when the `--write-info-json` flag is used. ytdl-nfo uses a set of YAML configs, located in `ytdl_nfo/configs` to control how metadata from the JSON file is mapped to NFO tags.
@@ -69,6 +73,12 @@ ytdl-nfo video_folder
 
 # Create a single NFO file using metadata from `great_video.info.json` and the `custom_extractor_name` template
 ytdl-nfo --extractor custom_extractor_name great_video.info.json
+
+# If using Docker, the ENTRYPOINT is already running `python3 -m ytdl_nfo`, so you just need to pass your arguments
+docker run -it --rm ytdl-nfo:latest --help
+
+# If using Docker, you need to pass in a volume that contains the JSON file, then specify the path to that JSON file inside the container
+docker run -it --rm --volume ~/Downloads:/my-volume ytdl-nfo:latest --extractor youtube /my-volume/sample.json
 ```
 
 ## Contributing
