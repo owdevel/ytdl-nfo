@@ -4,7 +4,7 @@
 # If you need more help, visit the Dockerfile reference guide at
 # https://docs.docker.com/engine/reference/builder/
 
-ARG PYTHON_VERSION=3.8
+ARG PYTHON_VERSION=3.14
 FROM python:${PYTHON_VERSION}-slim AS build
 
 WORKDIR /app
@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     poetry install && poetry build
 
 
-ARG PYTHON_VERSION=3.8
+ARG PYTHON_VERSION=3.14
 FROM python:${PYTHON_VERSION}-slim AS base
 
 # Prevents Python from writing pyc files.
