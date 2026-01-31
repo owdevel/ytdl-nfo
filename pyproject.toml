@@ -4,7 +4,7 @@ version = "0.3.0"
 description = "Utility to convert youtube-dl/yt-dlp json metadata to .nfo"
 license = { text = "Unlicense" }
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [{ name = "Owen", email = "owdevel@gmail.com" }]
 
 dependencies = ["PyYAML>=6.0.1", "setuptools>=70.2.0"]
