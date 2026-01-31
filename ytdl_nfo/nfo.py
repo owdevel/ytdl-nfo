@@ -2,7 +2,7 @@ import yaml
 import ast
 import datetime as dt
 import xml.etree.ElementTree as ET
-import pkg_resources
+import importlib.resources
 from collections import defaultdict
 from xml.dom import minidom
 
@@ -13,7 +13,8 @@ class Nfo:
         self.top = None
         try:
             extractor_path = f"configs/{extractor}.yaml"
-            with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
+            ref = importlib.resources.files("ytdl_nfo").joinpath(extractor_path)
+            with ref.open("rb") as f:
                 self.data = yaml.load(f, Loader=yaml.FullLoader)
         except FileNotFoundError:
             print(f"Error: No config available for extractor {extractor} in file {file_path}")
