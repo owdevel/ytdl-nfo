@@ -1,25 +1,8 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-      "config:recommended",
-      ":dependencyDashboard",
-      ":disableRateLimiting",
-      ":timezone(America/Los_Angeles)",
-      ":semanticCommits"
-    ],
-    "dependencyDashboardTitle": "Renovate Dashboard 🤖",
-    "forkProcessing": "enabled",
-    "assignees": ["jacaudi"],
-    "suppressNotifications": [
-      "prEditedNotification",
-      "prIgnoreNotification"
-    ],
-    "packageRules": [
-      {
-        "description": "Python version n-1 (one version behind latest)",
-        "matchDatasources": ["docker", "pyenv", "github-tags", "github-releases"],
-        "matchPackageNames": ["python", "mcr.microsoft.com/devcontainers/python", "actions/setup-python"],
-        "allowedVersions": "<3.14"
-      }
-    ]
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>jacaudi/renovate-config:base",
+    "github>jacaudi/renovate-config:python",
+    "github>jacaudi/renovate-config:fork"
+  ]
 }
