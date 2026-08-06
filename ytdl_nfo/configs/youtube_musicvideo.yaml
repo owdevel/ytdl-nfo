@@ -19,6 +19,19 @@ musicvideo:
   - ratings>rating>votes: '{like_count}'
   - userrating: '{userrating}'
   - thumb: '{thumbnail}'
+  - thumb:
+      attr:
+        aspect: 'clearlogo'
+      value: '{clearlogo}'
+  - thumb:
+      attr:
+        aspect: 'banner'
+      value: '{banner}'
+  - thumb:
+      attr:
+        aspect: 'poster'
+      value: '{artist_thumb}'
+  - fanart>thumb: '{fanart}'
   - fileinfo>streamdetails>audio>language: '{audio_language}'
   - fileinfo>streamdetails>video>durationinseconds: '{duration}'
   - track: '{id}'

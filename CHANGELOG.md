@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Automatic Rating Calculation**: Scaled rating scores from `average_rating` or `like_count`/`view_count` ratios into a standard 10-point scale.
 - **Dynamic Audio Language Normalization**: Mapped language codes dynamically to 3-letter ISO 639-2 format (`spa`, `eng`, `ita`, `fra`, `deu`, etc.) leaving unspecified fields clean.
 - **New Extractor `youtube_musicvideo`**: Added new extractor configuration (`ytdl_nfo/configs/youtube_musicvideo.yaml`) to output `<musicvideo>` root XML tags.
+- **Fanart.tv Integration**: Added optional `--fanart-key` / `-fk` CLI parameter and `ytdl_nfo/fanart.py` module to automatically fetch artist logos (`clearlogo`), banners, posters, and background fanart via MusicBrainz + Fanart.tv APIs.
 
 ### Changed
 - **Dependencies**: Removed unnecessary `setuptools` runtime requirement from `pyproject.toml`.

@@ -3,8 +3,10 @@ import ast
 import datetime as dt
 import xml.etree.ElementTree as ET
 import importlib.resources
+import os
 from collections import defaultdict
 from xml.dom import minidom
+from .fanart import fetch_fanart_data
 
 
 class Nfo:
@@ -24,7 +26,17 @@ class Nfo:
     def generated_ok(self):
         return self.top is not None
     
-    def generate(self, raw_data):
+    def generate(self, raw_data, fanart_key=None):
+
+        # Fanart.tv integration
+        f_key = fanart_key or raw_data.get("fanart_key") or os.environ.get("FANART_API_KEY")
+        if f_key and not raw_data.get("_fanart_fetched"):
+            raw_data["_fanart_fetched"] = True
+            artist = raw_data.get("uploader") or raw_data.get("artist")
+            if artist:
+                fa = fetch_fanart_data(artist, api_key=f_key)
+                if fa:
+                    raw_data.update(fa)
 
         # There should only be one top level node
         top_name = list(self.data.keys())[0]

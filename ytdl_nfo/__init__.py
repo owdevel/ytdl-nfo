@@ -27,6 +27,13 @@ def main():
         "-w", "--overwrite", action="store_true", help="Overwrite existing NFO files"
     )
     parser.add_argument(
+        "-fk",
+        "--fanart-key",
+        type=str,
+        default=None,
+        help="Fanart.tv API key to fetch artist artwork (logos, banners, fanart)",
+    )
+    parser.add_argument(
         "input",
         metavar="JSON_FILE",
         type=str,
@@ -38,7 +45,7 @@ def main():
 
     if os.path.isfile(args.input):
         print(f"Processing {args.input} with {extractor_str} extractor")
-        file = Ytdl_nfo(args.input, args.extractor)
+        file = Ytdl_nfo(args.input, args.extractor, fanart_key=args.fanart_key)
         file.process()
     else:
         for root, dirs, files in os.walk(args.input):
@@ -47,7 +54,7 @@ def main():
                 if file_name.endswith(".live_chat.json"):
                     continue
                 if re.search(args.regex, file_name):
-                    file = Ytdl_nfo(file_path, args.extractor)
+                    file = Ytdl_nfo(file_path, args.extractor, fanart_key=args.fanart_key)
                     if args.overwrite or not os.path.exists(file.get_nfo_path()):
                         print(f"Processing {file_path} with {extractor_str} extractor")
                         file.process()
