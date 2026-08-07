@@ -98,12 +98,13 @@ def detect_and_download_artwork(file_path, raw_data, download=False):
             local_fanart = cand
             break
 
-    if not local_fanart and download and raw_data.get("fanart"):
+    fanart_url = raw_data.get("fanart") or raw_data.get("thumbnail")
+    if not local_fanart and download and fanart_url:
         dest = os.path.join(dir_path, f"{base_name}-fanart.jpg")
-        if download_url(raw_data["fanart"], dest):
+        if download_url(fanart_url, dest):
             local_fanart = f"{base_name}-fanart.jpg"
 
-    raw_data["local_fanart"] = local_fanart or raw_data.get("fanart") or ""
+    raw_data["local_fanart"] = local_fanart or fanart_url or ""
 
     # 4. Banner
     banner_candidates = [

@@ -1,3 +1,4 @@
+import sys
 import argparse
 import os
 import re
@@ -6,6 +7,13 @@ from .Ytdl_nfo import Ytdl_nfo
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(
         description="ytdl_nfo, a youtube-dl utility to convert the output of  'youtube-dl --write-info-json' to an NFO for use with Kodi, Plex, Emby, Jellyfin, etc."
     )

@@ -40,15 +40,16 @@ def fetch_fanart_data(artist_name, api_key=None, client_key=None):
         req = urllib.request.Request(
             mb_url,
             headers={
-                "User-Agent": "ytdl-nfo/0.4.0 ( https://github.com/exyron/ytdl-nfo )"
+                "User-Agent": "ytdl-nfo/0.5.1 ( https://github.com/exyron/ytdl-nfo )"
             },
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             artists = data.get("artists", [])
             if artists:
                 mbid = artists[0].get("id")
-    except Exception:
+    except Exception as e:
+        print(f"⚠️ Error al consultar MusicBrainz: {e}")
         mbid = None
 
     if not mbid:
@@ -62,9 +63,9 @@ def fetch_fanart_data(artist_name, api_key=None, client_key=None):
             fanart_url += f"&client_key={client_key}"
 
         req = urllib.request.Request(
-            fanart_url, headers={"User-Agent": "ytdl-nfo/0.4.0"}
+            fanart_url, headers={"User-Agent": "ytdl-nfo/0.5.1"}
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:
             fanart_data = json.loads(resp.read().decode("utf-8"))
 
             if "hdmusiclogo" in fanart_data and fanart_data["hdmusiclogo"]:
@@ -80,7 +81,7 @@ def fetch_fanart_data(artist_name, api_key=None, client_key=None):
 
             if "artistbackground" in fanart_data and fanart_data["artistbackground"]:
                 result["fanart"] = fanart_data["artistbackground"][0].get("url", "")
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"⚠️ Error al consultar Fanart.tv: {e}")
 
     return result
