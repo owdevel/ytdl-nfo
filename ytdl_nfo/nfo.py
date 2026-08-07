@@ -2,20 +2,24 @@ import yaml
 import ast
 import datetime as dt
 import xml.etree.ElementTree as ET
-import pkg_resources
+import importlib.resources
+import os
 from collections import defaultdict
 from xml.dom import minidom
+from .fanart import fetch_fanart_data
+from .artwork import detect_and_download_artwork
 
 
 class Nfo:
     def __init__(self, extractor, file_path):
         self.data = None
         self.top = None
+        self.file_path = file_path
         try:
-            extractor_path = f"configs/{extractor}.yaml"
-            with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
+            config_file = importlib.resources.files("ytdl_nfo").joinpath("configs", f"{extractor}.yaml")
+            with config_file.open("rb") as f:
                 self.data = yaml.load(f, Loader=yaml.FullLoader)
-        except FileNotFoundError:
+        except (FileNotFoundError, ModuleNotFoundError):
             print(f"Error: No config available for extractor {extractor} in file {file_path}")
     
     def config_ok(self):
@@ -24,7 +28,20 @@ class Nfo:
     def generated_ok(self):
         return self.top is not None
     
-    def generate(self, raw_data):
+    def generate(self, raw_data, fanart_key=None, download_thumbs=False):
+
+        # Fanart.tv integration
+        f_key = fanart_key or raw_data.get("fanart_key") or os.environ.get("FANART_API_KEY")
+        if f_key and not raw_data.get("_fanart_fetched"):
+            raw_data["_fanart_fetched"] = True
+            artist = raw_data.get("uploader") or raw_data.get("artist")
+            if artist:
+                fa = fetch_fanart_data(artist, api_key=f_key)
+                if fa:
+                    raw_data.update(fa)
+
+        # Detect/download local artwork files
+        detect_and_download_artwork(self.file_path, raw_data, download=download_thumbs)
 
         # There should only be one top level node
         top_name = list(self.data.keys())[0]
@@ -41,10 +58,79 @@ class Nfo:
 
     def __create_child(self, parent, subtree, raw_data):
         # Some .info.json files may not include an upload_date.
-        if raw_data.get("upload_date") is None:
+        if raw_data.get("upload_date") is None and raw_data.get("epoch") is not None:
             date = dt.datetime.fromtimestamp(raw_data["epoch"])
             raw_data["upload_date"] = date.strftime("%Y%m%d")
         
+        # Calculate rating and userrating if missing
+        if raw_data.get("rating") is None:
+            if raw_data.get("average_rating") is not None:
+                try:
+                    avg = float(raw_data["average_rating"])
+                    raw_data["rating"] = round(avg * 2, 1) if avg <= 5 else round(avg, 1)
+                except (ValueError, TypeError):
+                    raw_data["rating"] = 8.0
+            elif raw_data.get("like_count") is not None and raw_data.get("dislike_count") is not None:
+                try:
+                    likes = float(raw_data["like_count"])
+                    dislikes = float(raw_data["dislike_count"])
+                    total = likes + dislikes
+                    if total > 0:
+                        raw_data["rating"] = round((likes / total) * 10, 1)
+                    else:
+                        raw_data["rating"] = 8.0
+                except (ValueError, TypeError, ZeroDivisionError):
+                    raw_data["rating"] = 8.0
+            elif raw_data.get("like_count") is not None and raw_data.get("view_count") is not None:
+                try:
+                    likes = float(raw_data["like_count"])
+                    views = float(raw_data["view_count"])
+                    if views > 0:
+                        ratio = (likes / views) * 100
+                        raw_data["rating"] = min(10.0, max(5.0, round(5.0 + ratio * 1.5, 1)))
+                    else:
+                        raw_data["rating"] = 8.0
+                except (ValueError, TypeError, ZeroDivisionError):
+                    raw_data["rating"] = 8.0
+            else:
+                raw_data["rating"] = 8.0
+
+        if raw_data.get("userrating") is None:
+            try:
+                r_val = float(raw_data["rating"])
+                raw_data["userrating"] = str(int(round(r_val)))
+                raw_data["rating"] = f"{r_val:.1f}"
+            except (ValueError, TypeError):
+                raw_data["userrating"] = "8"
+                raw_data["rating"] = "8.0"
+        
+        # Calculate audio_language if missing
+        if raw_data.get("audio_language") is None:
+            lang = raw_data.get("language")
+            if not lang and isinstance(raw_data.get("subtitles"), dict) and len(raw_data["subtitles"]) > 0:
+                lang = list(raw_data["subtitles"].keys())[0]
+            
+            if lang:
+                l_code = str(lang).lower().split("-")[0].split("_")[0]
+                ISO_MAP = {
+                    "es": "spa", "spa": "spa",
+                    "en": "eng", "eng": "eng",
+                    "it": "ita", "ita": "ita",
+                    "fr": "fra", "fre": "fra", "fra": "fra",
+                    "de": "deu", "ger": "deu", "deu": "deu",
+                    "pt": "por", "por": "por",
+                    "ru": "rus", "rus": "rus",
+                    "ja": "jpn", "jpn": "jpn",
+                    "zh": "zho", "chi": "zho", "zho": "zho",
+                    "nl": "nld", "dut": "nld", "nld": "nld",
+                    "pl": "pol", "pol": "pol",
+                    "sv": "swe", "swe": "swe",
+                    "ko": "kor", "kor": "kor"
+                }
+                raw_data["audio_language"] = ISO_MAP.get(l_code, l_code)
+            else:
+                raw_data["audio_language"] = ""
+
         # Allow missing keys to give an empty string instead of
         # a KeyError when formatting values
         # https://stackoverflow.com/a/21754294
@@ -74,7 +160,14 @@ class Nfo:
 
             # Set children if value flag
             if table:
-                children = ast.literal_eval(value.format_map(format_dict))
+                val_str = value.format_map(format_dict)
+                if val_str:
+                    try:
+                        children = ast.literal_eval(val_str)
+                    except (ValueError, SyntaxError):
+                        children = []
+                else:
+                    children = []
             else:
                 children = [value.format_map(format_dict)]
 
@@ -85,14 +178,26 @@ class Nfo:
 
                 for i in range(len(children)):
                     if target_type == 'date':
-                        date = dt.datetime.strptime(children[i], input_f)
-                        children[i] = date.strftime(output_f)
+                        if children[i]:
+                            try:
+                                date = dt.datetime.strptime(children[i], input_f)
+                                children[i] = date.strftime(output_f)
+                            except ValueError:
+                                children[i] = ""
+                        else:
+                            children[i] = ""
 
         # Value only
         else:
             if table:
-                children = ast.literal_eval(
-                    subtree[child_name].format_map(format_dict))
+                val_str = subtree[child_name].format_map(format_dict)
+                if val_str:
+                    try:
+                        children = ast.literal_eval(val_str)
+                    except (ValueError, SyntaxError):
+                        children = []
+                else:
+                    children = []
             else:
                 children = [subtree[child_name].format_map(format_dict)]
 
@@ -104,35 +209,42 @@ class Nfo:
             sub_name = child_name
             sub_index = sub_name.find('>')
             while sub_index > -1:
-                if not table:
-                    raise ValueError(f'Error with key {sub_name}: > deliminator can only be used for lists')
-                sub_parent = ET.SubElement(sub_parent, sub_name[:sub_index])
+                p_name = sub_name[:sub_index]
+                existing = sub_parent.find(p_name)
+                if existing is not None and not table:
+                    sub_parent = existing
+                else:
+                    sub_parent = ET.SubElement(sub_parent, p_name)
                 sub_name = sub_name[sub_index + 1:]
                 sub_index = sub_name.find('>')
 
             child = ET.SubElement(sub_parent, sub_name)
-            child.text = value
+            child.text = str(value)
 
             # Add attributes
             if 'attr' in attributes.keys():
                 for attribute, attr_value in attributes['attr'].items():
                     child.set(attribute, attr_value.format_map(format_dict))
 
+            if 'parent_attr' in attributes.keys():
+                for attribute, attr_value in attributes['parent_attr'].items():
+                    sub_parent.set(attribute, attr_value.format_map(format_dict))
+
     def print_nfo(self):
-        xmlstr = minidom.parseString(ET.tostring(
-            self.top, 'utf-8')).toprettyxml(indent="    ")
-        print(xmlstr)
+        xmlbytes = minidom.parseString(ET.tostring(
+            self.top, 'utf-8')).toprettyxml(indent="    ", encoding="utf-8")
+        print(xmlbytes.decode("utf-8"))
 
     def write_nfo(self, filename):
-        xmlstr = minidom.parseString(ET.tostring(
-            self.top, 'utf-8')).toprettyxml(indent="    ")
-        with open(filename, 'wt', encoding="utf-8") as f:
-            f.write(xmlstr)
+        xmlbytes = minidom.parseString(ET.tostring(
+            self.top, 'utf-8')).toprettyxml(indent="    ", encoding="utf-8")
+        with open(filename, 'wb') as f:
+            f.write(xmlbytes)
 
     def get_nfo(self):
-        xmlstr = minidom.parseString(ET.tostring(
-            self.top, 'utf-8')).toprettyxml(indent="    ")
-        return xmlstr
+        xmlbytes = minidom.parseString(ET.tostring(
+            self.top, 'utf-8')).toprettyxml(indent="    ", encoding="utf-8")
+        return xmlbytes.decode("utf-8")
 
 
 def get_config(extractor, file_path):

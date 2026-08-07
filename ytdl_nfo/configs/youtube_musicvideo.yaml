@@ -1,17 +1,13 @@
-episodedetails:
+musicvideo:
   - title: '{title}'
-  - showtitle: '{uploader}'
-  - studio: '{uploader}'
-  - uniqueid:
-      attr:
-        type: 'youtube'
-        default: "true"
-      value: '{id}'
+  - artist: '{uploader}'
   - plot: '{description}'
-  - premiered:
+  - genre!: '{tags}'
+  - studio: '{uploader}'
+  - year:
       convert: 'date'
       input_f: '%Y%m%d'
-      output_f: '%Y-%m-%d'
+      output_f: '%Y'
       value: '{upload_date}'
   - runtime: '{duration}'
   - ratings>rating>value:
@@ -31,7 +27,23 @@ episodedetails:
       attr:
         aspect: 'thumb'
       value: '{thumbnail}'
+  - thumb:
+      attr:
+        aspect: 'clearlogo'
+      value: '{clearlogo}'
+  - thumb:
+      attr:
+        aspect: 'logo'
+      value: '{clearlogo}'
+  - thumb:
+      attr:
+        aspect: 'banner'
+      value: '{banner}'
+  - thumb:
+      attr:
+        aspect: 'artist'
+      value: '{artist_thumb}'
+  - fanart>thumb: '{fanart}'
   - fileinfo>streamdetails>audio>language: '{audio_language}'
   - fileinfo>streamdetails>video>durationinseconds: '{duration}'
-  - genre!: '{categories}'
-  - tag!: '{tags}'
+  - track: '{id}'
