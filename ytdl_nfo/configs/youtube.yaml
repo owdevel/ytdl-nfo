@@ -23,6 +23,14 @@ episodedetails:
   - ratings>rating>votes: '{like_count}'
   - userrating: '{userrating}'
   - thumb: '{thumbnail}'
+  - thumb:
+      attr:
+        aspect: 'poster'
+      value: '{thumbnail}'
+  - thumb:
+      attr:
+        aspect: 'thumb'
+      value: '{thumbnail}'
   - fileinfo>streamdetails>audio>language: '{audio_language}'
   - fileinfo>streamdetails>video>durationinseconds: '{duration}'
   - genre!: '{categories}'

@@ -5,7 +5,7 @@ from .nfo import get_config
 
 
 class Ytdl_nfo:
-    def __init__(self, file_path, extractor=None, fanart_key=None):
+    def __init__(self, file_path, extractor=None, fanart_key=None, download_thumbs=False):
         self.path = file_path
         self.dir = os.path.dirname(file_path)
         self.data = None
@@ -13,6 +13,7 @@ class Ytdl_nfo:
         self.input_ok = True
         self.extractor = extractor
         self.fanart_key = fanart_key
+        self.download_thumbs = download_thumbs
         
         # Read json data
         if self.input_ok:
@@ -45,7 +46,7 @@ class Ytdl_nfo:
     def process(self):
         if not self.input_ok or self.nfo is None or not self.nfo.config_ok():
             return False
-        generated = self.nfo.generate(self.data, fanart_key=self.fanart_key)
+        generated = self.nfo.generate(self.data, fanart_key=self.fanart_key, download_thumbs=self.download_thumbs)
         if generated:
             self.write_nfo()
         return generated

@@ -7,12 +7,14 @@ import os
 from collections import defaultdict
 from xml.dom import minidom
 from .fanart import fetch_fanart_data
+from .artwork import detect_and_download_artwork
 
 
 class Nfo:
     def __init__(self, extractor, file_path):
         self.data = None
         self.top = None
+        self.file_path = file_path
         try:
             config_file = importlib.resources.files("ytdl_nfo").joinpath("configs", f"{extractor}.yaml")
             with config_file.open("rb") as f:
@@ -26,7 +28,7 @@ class Nfo:
     def generated_ok(self):
         return self.top is not None
     
-    def generate(self, raw_data, fanart_key=None):
+    def generate(self, raw_data, fanart_key=None, download_thumbs=False):
 
         # Fanart.tv integration
         f_key = fanart_key or raw_data.get("fanart_key") or os.environ.get("FANART_API_KEY")
@@ -37,6 +39,9 @@ class Nfo:
                 fa = fetch_fanart_data(artist, api_key=f_key)
                 if fa:
                     raw_data.update(fa)
+
+        # Detect/download local artwork files
+        detect_and_download_artwork(self.file_path, raw_data, download=download_thumbs)
 
         # There should only be one top level node
         top_name = list(self.data.keys())[0]

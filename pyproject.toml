@@ -1,6 +1,6 @@
 [project]
 name = "ytdl-nfo"
-version = "0.4.0"
+version = "0.5.0"
 description = "Utility to convert youtube-dl/yt-dlp json metadata to .nfo"
 license = { text = "Unlicense" }
 readme = "README.md"

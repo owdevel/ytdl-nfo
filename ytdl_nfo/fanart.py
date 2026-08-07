@@ -4,6 +4,17 @@ import urllib.parse
 import urllib.request
 
 
+def clean_artist_name(name):
+    if not name:
+        return ""
+    import re
+    name = re.sub(r"VEVO$", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"-?\s*Topic$", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"-?\s*Official$", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"([a-z])([A-Z])", r"\1 \2", name)
+    return name.strip()
+
+
 def fetch_fanart_data(artist_name, api_key=None, client_key=None):
     """
     Fetches artist artwork URLs from Fanart.tv via MusicBrainz MBID lookup.
@@ -14,6 +25,7 @@ def fetch_fanart_data(artist_name, api_key=None, client_key=None):
     if not api_key:
         return {}
 
+    artist_name = clean_artist_name(artist_name)
     if not artist_name:
         return {}
 

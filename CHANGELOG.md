@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-08-07
+
+### Added
+- **Local Artwork Downloader (`-dt` / `--download-thumbs`)**: Added automatic local image file detection and downloading module (`ytdl_nfo/artwork.py`). Automatically saves thumbnails, logos, and fanart to local `.jpg`/`.png` files alongside videos for 100% offline Kodi compatibility.
+- **Non-Recursive Directory Scanning (`-nr` / `--no-recurse`)**: Added option to scan only the top-level directory without processing subdirectories recursively.
+- **Smart Artist Name Cleaner**: Automatically cleans YouTube uploader names (stripping `VEVO`, `Topic`, `Official`, and splitting CamelCase like `DuaLipa` -> `Dua Lipa`) for accurate MusicBrainz / Fanart.tv artist lookups.
+- **Kodi Favorites Artwork Compatibility**: Updated `youtube.yaml` and `youtube_musicvideo.yaml` to map `aspect="poster"` and `aspect="thumb"` to the video cover (`thumbnail`), fixing incorrect thumbnail rendering in Kodi's Favorites menu (`favourites.xml`).
+
 ## [0.4.0] - 2026-08-06
 
 ### Fixed

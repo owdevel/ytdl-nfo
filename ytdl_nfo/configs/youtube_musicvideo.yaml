@@ -21,7 +21,19 @@ musicvideo:
   - thumb: '{thumbnail}'
   - thumb:
       attr:
+        aspect: 'poster'
+      value: '{thumbnail}'
+  - thumb:
+      attr:
+        aspect: 'thumb'
+      value: '{thumbnail}'
+  - thumb:
+      attr:
         aspect: 'clearlogo'
+      value: '{clearlogo}'
+  - thumb:
+      attr:
+        aspect: 'logo'
       value: '{clearlogo}'
   - thumb:
       attr:
@@ -29,7 +41,7 @@ musicvideo:
       value: '{banner}'
   - thumb:
       attr:
-        aspect: 'poster'
+        aspect: 'artist'
       value: '{artist_thumb}'
   - fanart>thumb: '{fanart}'
   - fileinfo>streamdetails>audio>language: '{audio_language}'

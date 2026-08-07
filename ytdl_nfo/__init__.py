@@ -34,6 +34,18 @@ def main():
         help="Fanart.tv API key to fetch artist artwork (logos, banners, fanart)",
     )
     parser.add_argument(
+        "-dt",
+        "--download-thumbs",
+        action="store_true",
+        help="Automatically download remote artwork (thumbnails, logos, fanart) to local image files alongside the video",
+    )
+    parser.add_argument(
+        "-nr",
+        "--no-recurse",
+        action="store_true",
+        help="Do not scan subdirectories recursively; only process files in the top-level directory",
+    )
+    parser.add_argument(
         "input",
         metavar="JSON_FILE",
         type=str,
@@ -45,16 +57,21 @@ def main():
 
     if os.path.isfile(args.input):
         print(f"Processing {args.input} with {extractor_str} extractor")
-        file = Ytdl_nfo(args.input, args.extractor, fanart_key=args.fanart_key)
+        file = Ytdl_nfo(args.input, args.extractor, fanart_key=args.fanart_key, download_thumbs=args.download_thumbs)
         file.process()
     else:
-        for root, dirs, files in os.walk(args.input):
+        if args.no_recurse:
+            walk_generator = [(args.input, [], [f for f in os.listdir(args.input) if os.path.isfile(os.path.join(args.input, f))])]
+        else:
+            walk_generator = os.walk(args.input)
+
+        for root, dirs, files in walk_generator:
             for file_name in files:
                 file_path = os.path.join(root, file_name)
                 if file_name.endswith(".live_chat.json"):
                     continue
                 if re.search(args.regex, file_name):
-                    file = Ytdl_nfo(file_path, args.extractor, fanart_key=args.fanart_key)
+                    file = Ytdl_nfo(file_path, args.extractor, fanart_key=args.fanart_key, download_thumbs=args.download_thumbs)
                     if args.overwrite or not os.path.exists(file.get_nfo_path()):
                         print(f"Processing {file_path} with {extractor_str} extractor")
                         file.process()
