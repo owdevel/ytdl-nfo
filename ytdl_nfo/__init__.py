@@ -15,6 +15,12 @@ def main():
         action="version",
         version=f"{get_config_path()}",
     )
+    parser.add_argument(
+        "--extractor-path",
+        dest='config_path',
+        type=str,
+        help="Set the path to the config directory",
+    )
     parser.add_argument("-e", "--extractor", help="Specify specific extractor")
     parser.add_argument(
         "-r",
@@ -38,7 +44,7 @@ def main():
 
     if os.path.isfile(args.input):
         print(f"Processing {args.input} with {extractor_str} extractor")
-        file = Ytdl_nfo(args.input, args.extractor)
+        file = Ytdl_nfo(args.input, args.extractor, config_path=args.config_path)
         file.process()
     else:
         for root, dirs, files in os.walk(args.input):

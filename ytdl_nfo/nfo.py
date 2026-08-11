@@ -1,3 +1,4 @@
+import os
 import yaml
 import ast
 import datetime as dt
@@ -8,15 +9,21 @@ from xml.dom import minidom
 
 
 class Nfo:
-    def __init__(self, extractor, file_path):
+    def __init__(self, extractor, file_path, config_path=None):
         self.data = None
         self.top = None
-        try:
-            extractor_path = f"configs/{extractor}.yaml"
-            with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
+        if config_path != None:
+            config_path = os.path.join(config_path, extractor + '.yaml')
+            config_path = os.path.realpath(config_path)
+            with open(config_path, 'rt') as f:
                 self.data = yaml.load(f, Loader=yaml.FullLoader)
-        except FileNotFoundError:
-            print(f"Error: No config available for extractor {extractor} in file {file_path}")
+        else:
+            try:
+                extractor_path = f"configs/{extractor}.yaml"
+                with pkg_resources.resource_stream("ytdl_nfo", extractor_path) as f:
+                    self.data = yaml.load(f, Loader=yaml.FullLoader)
+            except FileNotFoundError:
+                print(f"Error: No config available for extractor {extractor} in file {file_path}")
     
     def config_ok(self):
         return self.data is not None
@@ -135,5 +142,5 @@ class Nfo:
         return xmlstr
 
 
-def get_config(extractor, file_path):
-    return Nfo(extractor, file_path)
+def get_config(extractor, file_path, config_path=None):
+    return Nfo(extractor, file_path, config_path=config_path)
