@@ -5,7 +5,7 @@ from .nfo import get_config
 
 
 class Ytdl_nfo:
-    def __init__(self, file_path, extractor=None):
+    def __init__(self, file_path, extractor=None, config_path=None):
         self.path = file_path
         self.dir = os.path.dirname(file_path)
         self.data = None
@@ -37,7 +37,7 @@ class Ytdl_nfo:
             self.filename = self.path
         
         if isinstance(self.extractor, str):
-            self.nfo = get_config(self.extractor, self.path)
+            self.nfo = get_config(self.extractor, self.path, config_path=config_path)
         else:
             self.nfo = None
     
